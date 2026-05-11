@@ -45,6 +45,8 @@ function defaultMeta() {
     discountPercent: 100,
     finalPrice: "",
     note: "不含税",
+    orderNotes:
+      "1. 甜品台为预约项目，建议提前预定档期。\n2. 动物奶油易融，空调环境建议摆放 2–3 小时，请合理预约时间。\n3. 交通/摆台/撤场等费用请按实际情况另行确认。",
   };
 }
 
@@ -123,12 +125,14 @@ function init() {
   const metaDiscount = el("#metaDiscount");
   const metaFinalPrice = el("#metaFinalPrice");
   const metaNote = el("#metaNote");
+  const metaOrderNotes = el("#metaOrderNotes");
 
   const qDate = el("#qDate");
   const qLocation = el("#qLocation");
   const qCustomer = el("#qCustomer");
   const qContact = el("#qContact");
   const qNote = el("#qNote");
+  const qOrderNotes = el("#qOrderNotes");
 
   const quoteTbody = el("#quoteTbody");
   const subtotalEl = el("#subtotal");
@@ -428,12 +432,14 @@ function init() {
     metaDiscount.value = String(toNumber(state.meta.discountPercent || 100));
     metaFinalPrice.value = state.meta.finalPrice || "";
     metaNote.value = state.meta.note || "";
+    metaOrderNotes.value = state.meta.orderNotes || "";
 
     qDate.textContent = state.meta.date || "";
     qLocation.textContent = state.meta.location || "";
     qCustomer.textContent = state.meta.customer || "";
     qContact.textContent = state.meta.contact || "";
     qNote.textContent = state.meta.note || "";
+    qOrderNotes.textContent = state.meta.orderNotes || "";
   }
 
   function renderQuote() {
@@ -738,6 +744,7 @@ function init() {
     state.meta.discountPercent = clamp(toNumber(metaDiscount.value), 0, 100);
     state.meta.finalPrice = metaFinalPrice.value.trim();
     state.meta.note = metaNote.value.trim();
+    state.meta.orderNotes = metaOrderNotes.value || "";
     saveState(state);
     renderMeta();
     renderQuote();
@@ -757,6 +764,13 @@ function init() {
   metaDiscount.addEventListener("change", onMetaChange);
   metaFinalPrice.addEventListener("change", onMetaChange);
   metaNote.addEventListener("change", onMetaChange);
+  metaOrderNotes.addEventListener("change", onMetaChange);
+
+  qOrderNotes.addEventListener("input", () => {
+    state.meta.orderNotes = qOrderNotes.textContent || "";
+    metaOrderNotes.value = state.meta.orderNotes;
+    saveState(state);
+  });
 
   btnExportCsv.addEventListener("click", exportCsv);
 

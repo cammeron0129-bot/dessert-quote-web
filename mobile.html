@@ -78,6 +78,10 @@
                 <div class="field__label">备注</div>
                 <input id="metaNote" class="input" type="text" placeholder="例如：不含税 / 需提前一周预定" />
               </label>
+              <label class="field">
+                <div class="field__label">订购说明（可选）</div>
+                <textarea id="metaOrderNotes" class="input input--textarea" rows="5" placeholder="每行一条，例如：&#10;1. 甜品台为预约项目，建议提前预定档期。&#10;2. 动物奶油易融，空调环境建议摆放 2–3 小时。"></textarea>
+              </label>
             </div>
             <div class="controls__row">
               <button id="btnLoadTemplate" class="btn btn--ghost" type="button">一键载入“表2示例”</button>
@@ -132,12 +136,8 @@
           </div>
 
           <div class="paper__foot">
-            <div class="paper__footTitle">订购说明（可在左侧“备注”里补充）</div>
-            <ol class="paper__footList">
-              <li>甜品台为预约项目，建议提前预定档期。</li>
-              <li>动物奶油易融，空调环境建议摆放 2–3 小时，请合理预约时间。</li>
-              <li>交通/摆台/撤场等费用请按实际情况另行确认。</li>
-            </ol>
+            <div class="paper__footTitle">订购说明（可编辑）</div>
+            <div id="qOrderNotes" class="orderNotes" contenteditable="true" spellcheck="false"></div>
           </div>
         </div>
       </section>
