@@ -5,7 +5,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_纸杯蛋糕.png"
+    "image": "assets/menu/当夏甜品_纸杯蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_纸杯蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -13,7 +14,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_卡仕达酱戚风杯.jpeg"
+    "image": "assets/menu/当夏甜品_卡仕达酱戚风杯.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_卡仕达酱戚风杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -21,7 +23,8 @@
     "unitPrice": 8.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_蛋糕卷.png"
+    "image": "assets/menu/当夏甜品_蛋糕卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_蛋糕卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -29,7 +32,8 @@
     "unitPrice": 8.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶蛋糕卷.png"
+    "image": "assets/menu/当夏甜品_抹茶蛋糕卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶蛋糕卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -37,7 +41,8 @@
     "unitPrice": 8.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_红茶栗子蛋糕卷.png"
+    "image": "assets/menu/当夏甜品_红茶栗子蛋糕卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_红茶栗子蛋糕卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -45,7 +50,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_红茶奶冻蛋糕.png"
+    "image": "assets/menu/当夏甜品_红茶奶冻蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_红茶奶冻蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -53,7 +59,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_裸蛋糕.png"
+    "image": "assets/menu/当夏甜品_裸蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_裸蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -61,7 +68,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_焦糖小方块.png"
+    "image": "assets/menu/当夏甜品_焦糖小方块.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_焦糖小方块.webp"
   },
   {
     "category": "当夏甜品",
@@ -69,7 +77,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_红丝绒小切块.png"
+    "image": "assets/menu/当夏甜品_红丝绒小切块.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_红丝绒小切块.webp"
   },
   {
     "category": "当夏甜品",
@@ -77,7 +86,8 @@
     "unitPrice": 5.0,
     "minOrder": "24个",
     "minOrderNum": 24.0,
-    "image": "assets/menu/当夏甜品_奶油小切块多口味.png"
+    "image": "assets/menu/当夏甜品_奶油小切块多口味.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_奶油小切块多口味.webp"
   },
   {
     "category": "当夏甜品",
@@ -85,7 +95,8 @@
     "unitPrice": 8.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶红豆蛋糕卷.png"
+    "image": "assets/menu/当夏甜品_抹茶红豆蛋糕卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶红豆蛋糕卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -93,7 +104,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_奶油华夫饼.png"
+    "image": "assets/menu/当夏甜品_奶油华夫饼.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_奶油华夫饼.webp"
   },
   {
     "category": "当夏甜品",
@@ -101,7 +113,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_梦龙小方.png"
+    "image": "assets/menu/当夏甜品_梦龙小方.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_梦龙小方.webp"
   },
   {
     "category": "当夏甜品",
@@ -109,7 +122,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_豆乳杯子.png"
+    "image": "assets/menu/当夏甜品_豆乳杯子.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_豆乳杯子.webp"
   },
   {
     "category": "当夏甜品",
@@ -117,7 +131,8 @@
     "unitPrice": 8.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_脆啵啵慕斯.png"
+    "image": "assets/menu/当夏甜品_脆啵啵慕斯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_脆啵啵慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -125,7 +140,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_慕斯多口味.png"
+    "image": "assets/menu/当夏甜品_慕斯多口味.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_慕斯多口味.webp"
   },
   {
     "category": "当夏甜品",
@@ -133,7 +149,8 @@
     "unitPrice": 8.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_芒果慕斯.png"
+    "image": "assets/menu/当夏甜品_芒果慕斯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -141,7 +158,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_黑椅子慕斯.jpeg"
+    "image": "assets/menu/当夏甜品_黑椅子慕斯.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_黑椅子慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -149,7 +167,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_椰子慕斯.png"
+    "image": "assets/menu/当夏甜品_椰子慕斯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_椰子慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -157,7 +176,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_双色慕斯多口味.png"
+    "image": "assets/menu/当夏甜品_双色慕斯多口味.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_双色慕斯多口味.webp"
   },
   {
     "category": "当夏甜品",
@@ -165,7 +185,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_高脚杯慕斯.png"
+    "image": "assets/menu/当夏甜品_高脚杯慕斯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_高脚杯慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -173,7 +194,8 @@
     "unitPrice": 10.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_原味巴斯克.png"
+    "image": "assets/menu/当夏甜品_原味巴斯克.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_原味巴斯克.webp"
   },
   {
     "category": "当夏甜品",
@@ -181,7 +203,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_轻乳酪芝士.png"
+    "image": "assets/menu/当夏甜品_轻乳酪芝士.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_轻乳酪芝士.webp"
   },
   {
     "category": "当夏甜品",
@@ -189,7 +212,8 @@
     "unitPrice": 10.0,
     "minOrder": "16个",
     "minOrderNum": 16.0,
-    "image": "assets/menu/当夏甜品_柿子大福.png"
+    "image": "assets/menu/当夏甜品_柿子大福.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_柿子大福.webp"
   },
   {
     "category": "当夏甜品",
@@ -197,7 +221,8 @@
     "unitPrice": 8.0,
     "minOrder": "16个",
     "minOrderNum": 16.0,
-    "image": "assets/menu/当夏甜品_草莓芝士.png"
+    "image": "assets/menu/当夏甜品_草莓芝士.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_草莓芝士.webp"
   },
   {
     "category": "当夏甜品",
@@ -205,7 +230,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_抹茶奶贝.png"
+    "image": "assets/menu/当夏甜品_抹茶奶贝.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶奶贝.webp"
   },
   {
     "category": "当夏甜品",
@@ -213,7 +239,8 @@
     "unitPrice": 8.0,
     "minOrder": "16个",
     "minOrderNum": 16.0,
-    "image": "assets/menu/当夏甜品_巧克力慕斯.png"
+    "image": "assets/menu/当夏甜品_巧克力慕斯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_巧克力慕斯.webp"
   },
   {
     "category": "当夏甜品",
@@ -221,7 +248,8 @@
     "unitPrice": 8.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶雪山.png"
+    "image": "assets/menu/当夏甜品_抹茶雪山.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶雪山.webp"
   },
   {
     "category": "当夏甜品",
@@ -229,7 +257,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_椰子慕斯小圆杯.png"
+    "image": "assets/menu/当夏甜品_椰子慕斯小圆杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_椰子慕斯小圆杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -237,7 +266,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_巧克力口味蛋糕.png"
+    "image": "assets/menu/当夏甜品_巧克力口味蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_巧克力口味蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -245,7 +275,8 @@
     "unitPrice": 4.0,
     "minOrder": "18个",
     "minOrderNum": 18.0,
-    "image": "assets/menu/当夏甜品_小熊玛德琳.png"
+    "image": "assets/menu/当夏甜品_小熊玛德琳.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_小熊玛德琳.webp"
   },
   {
     "category": "当夏甜品",
@@ -253,7 +284,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_抹茶芒果蛋糕.png"
+    "image": "assets/menu/当夏甜品_抹茶芒果蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶芒果蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -261,7 +293,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_巴斯克纸杯蛋糕.png"
+    "image": "assets/menu/当夏甜品_巴斯克纸杯蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_巴斯克纸杯蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -269,7 +302,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_椰子慕斯塔.png"
+    "image": "assets/menu/当夏甜品_椰子慕斯塔.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_椰子慕斯塔.webp"
   },
   {
     "category": "当夏甜品",
@@ -277,7 +311,8 @@
     "unitPrice": 8.0,
     "minOrder": "6个",
     "minOrderNum": 6.0,
-    "image": "assets/menu/当夏甜品_棒棒糖蛋糕.jpeg"
+    "image": "assets/menu/当夏甜品_棒棒糖蛋糕.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_棒棒糖蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -285,7 +320,8 @@
     "unitPrice": 12.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_红丝绒奶盖蛋糕.png"
+    "image": "assets/menu/当夏甜品_红丝绒奶盖蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_红丝绒奶盖蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -293,7 +329,8 @@
     "unitPrice": 12.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_伯爵茶奶盖蛋糕.png"
+    "image": "assets/menu/当夏甜品_伯爵茶奶盖蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_伯爵茶奶盖蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -301,7 +338,8 @@
     "unitPrice": 12.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶熊猫蛋糕.png"
+    "image": "assets/menu/当夏甜品_抹茶熊猫蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶熊猫蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -309,7 +347,8 @@
     "unitPrice": 12.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_芒果躺平鸭.png"
+    "image": "assets/menu/当夏甜品_芒果躺平鸭.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果躺平鸭.webp"
   },
   {
     "category": "当夏甜品",
@@ -317,7 +356,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芋泥芒果小蛋糕.png"
+    "image": "assets/menu/当夏甜品_芋泥芒果小蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋泥芒果小蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -325,7 +365,8 @@
     "unitPrice": 10.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_麻薯布丁.png"
+    "image": "assets/menu/当夏甜品_麻薯布丁.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_麻薯布丁.webp"
   },
   {
     "category": "当夏甜品",
@@ -333,7 +374,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_粉色奥利奥蛋糕.png"
+    "image": "assets/menu/当夏甜品_粉色奥利奥蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_粉色奥利奥蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -341,7 +383,8 @@
     "unitPrice": 12.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_高脚奶冻杯.png"
+    "image": "assets/menu/当夏甜品_高脚奶冻杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_高脚奶冻杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -349,7 +392,8 @@
     "unitPrice": 8.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芋泥肉松蛋糕杯.png"
+    "image": "assets/menu/当夏甜品_芋泥肉松蛋糕杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋泥肉松蛋糕杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -357,7 +401,8 @@
     "unitPrice": 10.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_抹茶红豆蛋糕.png"
+    "image": "assets/menu/当夏甜品_抹茶红豆蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶红豆蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -365,7 +410,8 @@
     "unitPrice": 9.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_椰子布丁.png"
+    "image": "assets/menu/当夏甜品_椰子布丁.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_椰子布丁.webp"
   },
   {
     "category": "当夏甜品",
@@ -373,7 +419,8 @@
     "unitPrice": 10.0,
     "minOrder": "18杯",
     "minOrderNum": 18.0,
-    "image": "assets/menu/当夏甜品_提拉米苏杯.png"
+    "image": "assets/menu/当夏甜品_提拉米苏杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_提拉米苏杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -381,7 +428,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_桂花椰子冻.png"
+    "image": "assets/menu/当夏甜品_桂花椰子冻.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_桂花椰子冻.webp"
   },
   {
     "category": "当夏甜品",
@@ -389,7 +437,8 @@
     "unitPrice": 10.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_马卡龙.png"
+    "image": "assets/menu/当夏甜品_马卡龙.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_马卡龙.webp"
   },
   {
     "category": "当夏甜品",
@@ -397,7 +446,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_拿破仑酥.png"
+    "image": "assets/menu/当夏甜品_拿破仑酥.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_拿破仑酥.webp"
   },
   {
     "category": "当夏甜品",
@@ -405,7 +455,8 @@
     "unitPrice": 8.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_水果杯4种水果.png"
+    "image": "assets/menu/当夏甜品_水果杯4种水果.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_水果杯4种水果.webp"
   },
   {
     "category": "当夏甜品",
@@ -413,7 +464,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_奶油水果塔.png"
+    "image": "assets/menu/当夏甜品_奶油水果塔.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_奶油水果塔.webp"
   },
   {
     "category": "当夏甜品",
@@ -421,7 +473,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_泡芙.png"
+    "image": "assets/menu/当夏甜品_泡芙.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_泡芙.webp"
   },
   {
     "category": "当夏甜品",
@@ -429,7 +482,8 @@
     "unitPrice": 9.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_雪媚娘口味夹心.png"
+    "image": "assets/menu/当夏甜品_雪媚娘口味夹心.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_雪媚娘口味夹心.webp"
   },
   {
     "category": "当夏甜品",
@@ -437,7 +491,8 @@
     "unitPrice": 10.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_紫米芋泥奶酪杯.png"
+    "image": "assets/menu/当夏甜品_紫米芋泥奶酪杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_紫米芋泥奶酪杯.webp"
   },
   {
     "category": "当夏甜品",
@@ -445,7 +500,8 @@
     "unitPrice": 8.0,
     "minOrder": "16块",
     "minOrderNum": 16.0,
-    "image": "assets/menu/当夏甜品_巧克力芝士蛋糕.png"
+    "image": "assets/menu/当夏甜品_巧克力芝士蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_巧克力芝士蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -453,7 +509,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_推推乐蛋糕.png"
+    "image": "assets/menu/当夏甜品_推推乐蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_推推乐蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -461,7 +518,8 @@
     "unitPrice": 10.0,
     "minOrder": "6个",
     "minOrderNum": 6.0,
-    "image": "assets/menu/当夏甜品_冰棍蛋糕.png"
+    "image": "assets/menu/当夏甜品_冰棍蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_冰棍蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -469,7 +527,8 @@
     "unitPrice": 6.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芝士塔.png"
+    "image": "assets/menu/当夏甜品_芝士塔.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芝士塔.webp"
   },
   {
     "category": "当夏甜品",
@@ -477,7 +536,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_轻芝士蛋糕.png"
+    "image": "assets/menu/当夏甜品_轻芝士蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_轻芝士蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -485,7 +545,8 @@
     "unitPrice": 9.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_青柠芝士.png"
+    "image": "assets/menu/当夏甜品_青柠芝士.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_青柠芝士.webp"
   },
   {
     "category": "当夏甜品",
@@ -493,7 +554,8 @@
     "unitPrice": 6.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_巧克力抱抱卷.png"
+    "image": "assets/menu/当夏甜品_巧克力抱抱卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_巧克力抱抱卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -501,7 +563,8 @@
     "unitPrice": 6.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_抹茶抱抱卷.png"
+    "image": "assets/menu/当夏甜品_抹茶抱抱卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶抱抱卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -509,7 +572,8 @@
     "unitPrice": 12.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_豆乳布丁.png"
+    "image": "assets/menu/当夏甜品_豆乳布丁.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_豆乳布丁.webp"
   },
   {
     "category": "当夏甜品",
@@ -517,7 +581,8 @@
     "unitPrice": 12.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_抹茶蜜豆布丁.png"
+    "image": "assets/menu/当夏甜品_抹茶蜜豆布丁.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶蜜豆布丁.webp"
   },
   {
     "category": "当夏甜品",
@@ -525,7 +590,8 @@
     "unitPrice": 10.0,
     "minOrder": "6个",
     "minOrderNum": 6.0,
-    "image": "assets/menu/当夏甜品_甜甜圈.png"
+    "image": "assets/menu/当夏甜品_甜甜圈.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_甜甜圈.webp"
   },
   {
     "category": "当夏甜品",
@@ -533,7 +599,8 @@
     "unitPrice": 6.0,
     "minOrder": "15条",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏甜品_焦糖杏仁糯米船.png"
+    "image": "assets/menu/当夏甜品_焦糖杏仁糯米船.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_焦糖杏仁糯米船.webp"
   },
   {
     "category": "当夏甜品",
@@ -541,7 +608,8 @@
     "unitPrice": 7.0,
     "minOrder": "8串",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_奶盖白玉丸子.png"
+    "image": "assets/menu/当夏甜品_奶盖白玉丸子.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_奶盖白玉丸子.webp"
   },
   {
     "category": "当夏甜品",
@@ -549,7 +617,8 @@
     "unitPrice": 6.0,
     "minOrder": "8串",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_白玉丸子串.png"
+    "image": "assets/menu/当夏甜品_白玉丸子串.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_白玉丸子串.webp"
   },
   {
     "category": "当夏甜品",
@@ -557,7 +626,8 @@
     "unitPrice": 5.0,
     "minOrder": "18个",
     "minOrderNum": 18.0,
-    "image": "assets/menu/当夏甜品_玛德琳.png"
+    "image": "assets/menu/当夏甜品_玛德琳.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_玛德琳.webp"
   },
   {
     "category": "当夏甜品",
@@ -565,7 +635,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_麻薯.png"
+    "image": "assets/menu/当夏甜品_麻薯.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_麻薯.webp"
   },
   {
     "category": "当夏甜品",
@@ -573,7 +644,8 @@
     "unitPrice": 6.0,
     "minOrder": "18个",
     "minOrderNum": 18.0,
-    "image": "assets/menu/当夏甜品_蝴蝶酥.png"
+    "image": "assets/menu/当夏甜品_蝴蝶酥.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_蝴蝶酥.webp"
   },
   {
     "category": "当夏甜品",
@@ -581,7 +653,8 @@
     "unitPrice": 2.0,
     "minOrder": "20片",
     "minOrderNum": 20.0,
-    "image": "assets/menu/当夏甜品_云顶曲奇.png"
+    "image": "assets/menu/当夏甜品_云顶曲奇.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_云顶曲奇.webp"
   },
   {
     "category": "当夏甜品",
@@ -589,7 +662,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_玉兔奶冻.png"
+    "image": "assets/menu/当夏甜品_玉兔奶冻.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_玉兔奶冻.webp"
   },
   {
     "category": "当夏甜品",
@@ -597,7 +671,8 @@
     "unitPrice": 6.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芋泥肉松小方.png"
+    "image": "assets/menu/当夏甜品_芋泥肉松小方.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋泥肉松小方.webp"
   },
   {
     "category": "当夏甜品",
@@ -605,7 +680,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_绿豆糕.png"
+    "image": "assets/menu/当夏甜品_绿豆糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_绿豆糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -613,7 +689,8 @@
     "unitPrice": 6.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_葡式蛋挞.png"
+    "image": "assets/menu/当夏甜品_葡式蛋挞.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_葡式蛋挞.webp"
   },
   {
     "category": "当夏甜品",
@@ -621,7 +698,8 @@
     "unitPrice": 12.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_焦糖烤布雷.png"
+    "image": "assets/menu/当夏甜品_焦糖烤布雷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_焦糖烤布雷.webp"
   },
   {
     "category": "当夏甜品",
@@ -629,7 +707,8 @@
     "unitPrice": 9.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_大桔大利泡芙.png"
+    "image": "assets/menu/当夏甜品_大桔大利泡芙.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_大桔大利泡芙.webp"
   },
   {
     "category": "当夏甜品",
@@ -637,7 +716,8 @@
     "unitPrice": 10.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_柠檬磅蛋糕.png"
+    "image": "assets/menu/当夏甜品_柠檬磅蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_柠檬磅蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -645,7 +725,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芒果桃胶雪燕.png"
+    "image": "assets/menu/当夏甜品_芒果桃胶雪燕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果桃胶雪燕.webp"
   },
   {
     "category": "当夏甜品",
@@ -653,7 +734,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芋圆麻薯西米.png"
+    "image": "assets/menu/当夏甜品_芋圆麻薯西米.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋圆麻薯西米.webp"
   },
   {
     "category": "当夏甜品",
@@ -661,7 +743,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_芋圆西米红豆沙.png"
+    "image": "assets/menu/当夏甜品_芋圆西米红豆沙.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋圆西米红豆沙.webp"
   },
   {
     "category": "当夏甜品",
@@ -669,7 +752,8 @@
     "unitPrice": 15.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶梦龙卷.png"
+    "image": "assets/menu/当夏甜品_抹茶梦龙卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶梦龙卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -677,7 +761,8 @@
     "unitPrice": 15.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_抹茶芝士蛋糕.png"
+    "image": "assets/menu/当夏甜品_抹茶芝士蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶芝士蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -685,7 +770,8 @@
     "unitPrice": 16.0,
     "minOrder": "6个",
     "minOrderNum": 6.0,
-    "image": "assets/menu/当夏甜品_小熊芝士蛋糕.png"
+    "image": "assets/menu/当夏甜品_小熊芝士蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_小熊芝士蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -693,7 +779,8 @@
     "unitPrice": 15.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_可露丽.png"
+    "image": "assets/menu/当夏甜品_可露丽.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_可露丽.webp"
   },
   {
     "category": "当夏甜品",
@@ -701,7 +788,8 @@
     "unitPrice": 15.0,
     "minOrder": "9个",
     "minOrderNum": 9.0,
-    "image": "assets/menu/当夏甜品_芒果毛巾卷.png"
+    "image": "assets/menu/当夏甜品_芒果毛巾卷.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果毛巾卷.webp"
   },
   {
     "category": "当夏甜品",
@@ -709,7 +797,8 @@
     "unitPrice": 13.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏甜品_抹茶芝士挞.png"
+    "image": "assets/menu/当夏甜品_抹茶芝士挞.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶芝士挞.webp"
   },
   {
     "category": "当夏甜品",
@@ -717,7 +806,8 @@
     "unitPrice": 15.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_竹筒椰奶冻.png"
+    "image": "assets/menu/当夏甜品_竹筒椰奶冻.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_竹筒椰奶冻.webp"
   },
   {
     "category": "当夏甜品",
@@ -725,7 +815,8 @@
     "unitPrice": 15.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_草莓慕斯小方.png"
+    "image": "assets/menu/当夏甜品_草莓慕斯小方.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_草莓慕斯小方.webp"
   },
   {
     "category": "当夏甜品",
@@ -733,7 +824,8 @@
     "unitPrice": 15.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏甜品_椰子慕斯小方.png"
+    "image": "assets/menu/当夏甜品_椰子慕斯小方.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_椰子慕斯小方.webp"
   },
   {
     "category": "当夏甜品",
@@ -741,7 +833,8 @@
     "unitPrice": 20.0,
     "minOrder": "6个",
     "minOrderNum": 6.0,
-    "image": "assets/menu/当夏甜品_翻糖饼干定制.png"
+    "image": "assets/menu/当夏甜品_翻糖饼干定制.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_翻糖饼干定制.webp"
   },
   {
     "category": "当夏甜品",
@@ -749,7 +842,8 @@
     "unitPrice": 18.0,
     "minOrder": "20个",
     "minOrderNum": 20.0,
-    "image": "assets/menu/当夏甜品_企业logo饼干.png"
+    "image": "assets/menu/当夏甜品_企业logo饼干.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_企业logo饼干.webp"
   },
   {
     "category": "当夏甜品",
@@ -757,7 +851,8 @@
     "unitPrice": 18.0,
     "minOrder": "4个",
     "minOrderNum": 4.0,
-    "image": "assets/menu/当夏甜品_定制翻糖饼干.png"
+    "image": "assets/menu/当夏甜品_定制翻糖饼干.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_定制翻糖饼干.webp"
   },
   {
     "category": "当夏甜品",
@@ -765,7 +860,8 @@
     "unitPrice": 18.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏甜品_福袋蛋糕.png"
+    "image": "assets/menu/当夏甜品_福袋蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_福袋蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -773,7 +869,8 @@
     "unitPrice": 18.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_红茶奶盖蛋糕.png"
+    "image": "assets/menu/当夏甜品_红茶奶盖蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_红茶奶盖蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -781,7 +878,8 @@
     "unitPrice": 20.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_芒果芋泥盒子蛋糕.png"
+    "image": "assets/menu/当夏甜品_芒果芋泥盒子蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果芋泥盒子蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -789,7 +887,8 @@
     "unitPrice": 19.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_抹茶碧根果盒子蛋糕.png"
+    "image": "assets/menu/当夏甜品_抹茶碧根果盒子蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_抹茶碧根果盒子蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -797,7 +896,8 @@
     "unitPrice": 19.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_芋泥麻薯蛋糕.png"
+    "image": "assets/menu/当夏甜品_芋泥麻薯蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芋泥麻薯蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -805,7 +905,8 @@
     "unitPrice": 19.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_茉莉青提奶冻蛋糕.png"
+    "image": "assets/menu/当夏甜品_茉莉青提奶冻蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_茉莉青提奶冻蛋糕.webp"
   },
   {
     "category": "当夏甜品",
@@ -813,7 +914,8 @@
     "unitPrice": 19.0,
     "minOrder": "5个",
     "minOrderNum": 5.0,
-    "image": "assets/menu/当夏甜品_芒果便当盒子蛋糕.png"
+    "image": "assets/menu/当夏甜品_芒果便当盒子蛋糕.png",
+    "imageThumb": "assets/menu-thumbs/当夏甜品_芒果便当盒子蛋糕.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -821,7 +923,8 @@
     "unitPrice": 6.0,
     "minOrder": "20块",
     "minOrderNum": 20.0,
-    "image": "assets/menu/当夏咸食|冷餐_三明治.jpeg"
+    "image": "assets/menu/当夏咸食|冷餐_三明治.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_三明治.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -829,7 +932,8 @@
     "unitPrice": 7.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏咸食|冷餐_丹麦肠仔酥.png"
+    "image": "assets/menu/当夏咸食|冷餐_丹麦肠仔酥.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_丹麦肠仔酥.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -837,7 +941,8 @@
     "unitPrice": 5.0,
     "minOrder": "10串",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏咸食|冷餐_啵啵肠仔串.png"
+    "image": "assets/menu/当夏咸食|冷餐_啵啵肠仔串.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_啵啵肠仔串.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -845,7 +950,8 @@
     "unitPrice": 8.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏咸食|冷餐_吞拿鱼玉米塔.png"
+    "image": "assets/menu/当夏咸食|冷餐_吞拿鱼玉米塔.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_吞拿鱼玉米塔.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -853,7 +959,8 @@
     "unitPrice": 6.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏咸食|冷餐_培根卷黄油吐司.png"
+    "image": "assets/menu/当夏咸食|冷餐_培根卷黄油吐司.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_培根卷黄油吐司.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -861,7 +968,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏咸食|冷餐_滑蛋虾仁塔.png"
+    "image": "assets/menu/当夏咸食|冷餐_滑蛋虾仁塔.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_滑蛋虾仁塔.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -869,7 +977,8 @@
     "unitPrice": 10.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏咸食|冷餐_沙拉杯.png"
+    "image": "assets/menu/当夏咸食|冷餐_沙拉杯.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_沙拉杯.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -877,7 +986,8 @@
     "unitPrice": 6.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏咸食|冷餐_牛角包.png"
+    "image": "assets/menu/当夏咸食|冷餐_牛角包.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_牛角包.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -885,7 +995,8 @@
     "unitPrice": 9.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏咸食|冷餐_mini小汉堡.png"
+    "image": "assets/menu/当夏咸食|冷餐_mini小汉堡.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_mini小汉堡.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -893,7 +1004,8 @@
     "unitPrice": 8.0,
     "minOrder": "15块",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏咸食|冷餐_芝士培根法棍.png"
+    "image": "assets/menu/当夏咸食|冷餐_芝士培根法棍.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_芝士培根法棍.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -901,7 +1013,8 @@
     "unitPrice": 6.0,
     "minOrder": "20个",
     "minOrderNum": 20.0,
-    "image": "assets/menu/当夏咸食|冷餐_奥尔良烤翅.png"
+    "image": "assets/menu/当夏咸食|冷餐_奥尔良烤翅.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_奥尔良烤翅.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -909,7 +1022,8 @@
     "unitPrice": 8.0,
     "minOrder": "10个",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏咸食|冷餐_三明治可颂.png"
+    "image": "assets/menu/当夏咸食|冷餐_三明治可颂.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_三明治可颂.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -917,7 +1031,8 @@
     "unitPrice": 800.0,
     "minOrder": "1条",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏咸食|冷餐_寿司船12米.png"
+    "image": "assets/menu/当夏咸食|冷餐_寿司船12米.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_寿司船12米.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -925,7 +1040,8 @@
     "unitPrice": 8.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏咸食|冷餐_芝士鸡排黄油吐司.png"
+    "image": "assets/menu/当夏咸食|冷餐_芝士鸡排黄油吐司.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_芝士鸡排黄油吐司.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -933,7 +1049,8 @@
     "unitPrice": 15.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏咸食|冷餐_鳗鱼法棍.png"
+    "image": "assets/menu/当夏咸食|冷餐_鳗鱼法棍.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_鳗鱼法棍.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -941,7 +1058,8 @@
     "unitPrice": 20.0,
     "minOrder": "4份",
     "minOrderNum": 4.0,
-    "image": "assets/menu/当夏咸食|冷餐_笑脸薯饼200g.png"
+    "image": "assets/menu/当夏咸食|冷餐_笑脸薯饼200g.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_笑脸薯饼200g.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -949,7 +1067,8 @@
     "unitPrice": 8.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏咸食|冷餐_香辣鸡翅.png"
+    "image": "assets/menu/当夏咸食|冷餐_香辣鸡翅.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_香辣鸡翅.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -957,7 +1076,8 @@
     "unitPrice": 25.0,
     "minOrder": "4份",
     "minOrderNum": 4.0,
-    "image": "assets/menu/当夏咸食|冷餐_鸡米花200g.png"
+    "image": "assets/menu/当夏咸食|冷餐_鸡米花200g.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_鸡米花200g.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -965,7 +1085,8 @@
     "unitPrice": 12.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏咸食|冷餐_天妇罗炸虾.png"
+    "image": "assets/menu/当夏咸食|冷餐_天妇罗炸虾.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_天妇罗炸虾.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -973,7 +1094,8 @@
     "unitPrice": 30.0,
     "minOrder": "4份",
     "minOrderNum": 4.0,
-    "image": "assets/menu/当夏咸食|冷餐_蝴蝶虾200g.png"
+    "image": "assets/menu/当夏咸食|冷餐_蝴蝶虾200g.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_蝴蝶虾200g.webp"
   },
   {
     "category": "当夏咸食|冷餐",
@@ -981,7 +1103,8 @@
     "unitPrice": 150.0,
     "minOrder": "1份",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏咸食|冷餐_小龙虾1500g.png"
+    "image": "assets/menu/当夏咸食|冷餐_小龙虾1500g.png",
+    "imageThumb": "assets/menu-thumbs/当夏咸食|冷餐_小龙虾1500g.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -989,7 +1112,8 @@
     "unitPrice": 100.0,
     "minOrder": "1份（5款水果净重4斤）",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_水果拼盘.png"
+    "image": "assets/menu/当夏水果|茶饮_水果拼盘.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_水果拼盘.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -997,7 +1121,8 @@
     "unitPrice": 120.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_草莓气泡水.png"
+    "image": "assets/menu/当夏水果|茶饮_草莓气泡水.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_草莓气泡水.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1005,7 +1130,8 @@
     "unitPrice": 100.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_热红茶养生茶.png"
+    "image": "assets/menu/当夏水果|茶饮_热红茶养生茶.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_热红茶养生茶.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1013,7 +1139,8 @@
     "unitPrice": 100.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_水果茶.png"
+    "image": "assets/menu/当夏水果|茶饮_水果茶.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_水果茶.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1021,7 +1148,8 @@
     "unitPrice": 150.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_港式奶茶.png"
+    "image": "assets/menu/当夏水果|茶饮_港式奶茶.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_港式奶茶.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1029,7 +1157,8 @@
     "unitPrice": 150.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_美式咖啡.png"
+    "image": "assets/menu/当夏水果|茶饮_美式咖啡.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_美式咖啡.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1037,7 +1166,8 @@
     "unitPrice": 100.0,
     "minOrder": "1壶（8L)",
     "minOrderNum": 1.0,
-    "image": "assets/menu/当夏水果|茶饮_橙汁.png"
+    "image": "assets/menu/当夏水果|茶饮_橙汁.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_橙汁.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1045,7 +1175,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_芋泥啵啵牛乳270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_芋泥啵啵牛乳270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_芋泥啵啵牛乳270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1053,7 +1184,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_水果茶270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_水果茶270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_水果茶270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1061,7 +1193,8 @@
     "unitPrice": 12.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_港式奶茶270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_港式奶茶270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_港式奶茶270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1069,7 +1202,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_杨枝甘露270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_杨枝甘露270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_杨枝甘露270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1077,7 +1211,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_草莓椰椰270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_草莓椰椰270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_草莓椰椰270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1085,7 +1220,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_芒芒椰椰270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_芒芒椰椰270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_芒芒椰椰270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1093,7 +1229,8 @@
     "unitPrice": 10.0,
     "minOrder": "10瓶",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_海底椰雪梨膏270ml.png"
+    "image": "assets/menu/当夏水果|茶饮_海底椰雪梨膏270ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_海底椰雪梨膏270ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1101,7 +1238,8 @@
     "unitPrice": 19.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_草莓开心果牛乳500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_草莓开心果牛乳500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_草莓开心果牛乳500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1109,7 +1247,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_抹茶米麻薯500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_抹茶米麻薯500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_抹茶米麻薯500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1117,7 +1256,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_草莓椰椰500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_草莓椰椰500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_草莓椰椰500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1125,7 +1265,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_芒果椰椰500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_芒果椰椰500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_芒果椰椰500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1133,7 +1274,8 @@
     "unitPrice": 16.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_开心果牛乳500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_开心果牛乳500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_开心果牛乳500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1141,7 +1283,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_芋泥米麻薯500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_芋泥米麻薯500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_芋泥米麻薯500ml.webp"
   },
   {
     "category": "当夏水果|茶饮",
@@ -1149,7 +1292,8 @@
     "unitPrice": 15.0,
     "minOrder": "10杯",
     "minOrderNum": 10.0,
-    "image": "assets/menu/当夏水果|茶饮_西瓜椰椰500ml.png"
+    "image": "assets/menu/当夏水果|茶饮_西瓜椰椰500ml.png",
+    "imageThumb": "assets/menu-thumbs/当夏水果|茶饮_西瓜椰椰500ml.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1157,7 +1301,8 @@
     "unitPrice": 12.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_桃花酥.png"
+    "image": "assets/menu/当夏中式酥饼、糕点_桃花酥.png",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_桃花酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1165,7 +1310,8 @@
     "unitPrice": 15.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_枣花酥.jpeg"
+    "image": "assets/menu/当夏中式酥饼、糕点_枣花酥.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_枣花酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1173,7 +1319,8 @@
     "unitPrice": 12.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_凤梨酥.jpeg"
+    "image": "assets/menu/当夏中式酥饼、糕点_凤梨酥.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_凤梨酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1181,7 +1328,8 @@
     "unitPrice": 12.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_蛋黄酥.jpeg"
+    "image": "assets/menu/当夏中式酥饼、糕点_蛋黄酥.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_蛋黄酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1189,7 +1337,8 @@
     "unitPrice": 15.0,
     "minOrder": "12个",
     "minOrderNum": 12.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_荷花酥.png"
+    "image": "assets/menu/当夏中式酥饼、糕点_荷花酥.png",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_荷花酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1197,7 +1346,8 @@
     "unitPrice": 15.0,
     "minOrder": "15个",
     "minOrderNum": 15.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_玉兰酥.jpeg"
+    "image": "assets/menu/当夏中式酥饼、糕点_玉兰酥.jpeg",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_玉兰酥.webp"
   },
   {
     "category": "当夏中式酥饼、糕点",
@@ -1205,6 +1355,7 @@
     "unitPrice": 15.0,
     "minOrder": "8个",
     "minOrderNum": 8.0,
-    "image": "assets/menu/当夏中式酥饼、糕点_和果子.png"
+    "image": "assets/menu/当夏中式酥饼、糕点_和果子.png",
+    "imageThumb": "assets/menu-thumbs/当夏中式酥饼、糕点_和果子.webp"
   }
 ]

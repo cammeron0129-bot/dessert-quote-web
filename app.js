@@ -163,6 +163,11 @@ function init() {
     return item?.image || null;
   }
 
+  function menuThumbForName(name) {
+    const item = menu.find((m) => m.name === name);
+    return item?.imageThumb || item?.image || null;
+  }
+
   function setActiveTab(tabKey) {
     for (const t of tabs) t.classList.toggle("tab--active", t.dataset.tab === tabKey);
     for (const p of panes) p.classList.toggle("tabpane--active", p.dataset.pane === tabKey);
@@ -244,7 +249,9 @@ function init() {
         const img = document.createElement("img");
         img.alt = item.name;
         img.loading = "lazy";
-        img.src = item.image;
+        img.decoding = "async";
+        img.fetchPriority = "low";
+        img.src = item.imageThumb || item.image;
         img.addEventListener("click", () => openImageModal(item.image, item.name));
         thumb.appendChild(img);
       } else {
@@ -410,12 +417,15 @@ function init() {
       const tdImg = document.createElement("td");
       const imgWrap = document.createElement("div");
       const imgSrc = menuImageForLine(line);
+      const thumbSrc = line.source?.startsWith("menu:") ? menuThumbForName(line.source.slice("menu:".length)) : null;
       imgWrap.className = `quoteThumb ${imgSrc ? "" : "quoteThumb--empty"}`.trim();
       if (imgSrc) {
         const img = document.createElement("img");
-        img.src = imgSrc;
+        img.src = thumbSrc || imgSrc;
         img.alt = line.name || "图片";
         img.loading = "lazy";
+        img.decoding = "async";
+        img.fetchPriority = "low";
         img.addEventListener("click", () => openImageModal(imgSrc, line.name || ""));
         imgWrap.appendChild(img);
       } else {
