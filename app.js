@@ -195,6 +195,19 @@ function init() {
     });
   }
 
+  async function ensureHtml2Canvas() {
+    if (window.html2canvas) return window.html2canvas;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      s.async = true;
+      s.onload = resolve;
+      s.onerror = () => reject(new Error("加载导出组件失败（html2canvas）"));
+      document.head.appendChild(s);
+    });
+    return window.html2canvas;
+  }
+
   function computeExportWidth() {
     // Desktop: A4-ish width at 96dpi (794px). Mobile: fit screen width.
     const isMobile = document.body.classList.contains("mobile");
@@ -207,96 +220,63 @@ function init() {
     const node = document.querySelector("#quotePaper");
     if (!node) return;
 
-    // Clone to avoid affecting on-screen layout
-    const clone = node.cloneNode(true);
-    const wrap = document.createElement("div");
-    wrap.style.position = "fixed";
-    wrap.style.left = "-10000px";
-    wrap.style.top = "0";
-    wrap.style.width = "0";
-    wrap.style.height = "0";
-    wrap.style.overflow = "hidden";
-    wrap.appendChild(clone);
-    document.body.appendChild(wrap);
+    try {
+      const html2canvas = await ensureHtml2Canvas();
 
-    const width = computeExportWidth();
-    clone.style.width = `${width}px`;
-    clone.style.borderRadius = "0";
-    clone.style.boxShadow = "none";
-    clone.style.minHeight = "auto";
+      // Clone to avoid affecting on-screen layout
+      const clone = node.cloneNode(true);
+      const wrap = document.createElement("div");
+      wrap.style.position = "fixed";
+      wrap.style.left = "-10000px";
+      wrap.style.top = "0";
+      wrap.style.width = "0";
+      wrap.style.height = "0";
+      wrap.style.overflow = "hidden";
+      wrap.appendChild(clone);
+      document.body.appendChild(wrap);
 
-    // Ensure editable blocks keep their text
-    const srcOrderNotes = document.querySelector("#qOrderNotes");
-    const dstOrderNotes = clone.querySelector("#qOrderNotes");
-    if (srcOrderNotes && dstOrderNotes) dstOrderNotes.textContent = srcOrderNotes.textContent || "";
+      const width = computeExportWidth();
+      clone.style.width = `${width}px`;
+      clone.style.borderRadius = "0";
+      clone.style.boxShadow = "none";
+      clone.style.minHeight = "auto";
 
-    const srcTitle = document.querySelector("#qOrderNotesTitle");
-    const dstTitle = clone.querySelector("#qOrderNotesTitle");
-    if (srcTitle && dstTitle) dstTitle.textContent = srcTitle.textContent || "";
+      // Ensure editable blocks keep their text
+      const srcOrderNotes = document.querySelector("#qOrderNotes");
+      const dstOrderNotes = clone.querySelector("#qOrderNotes");
+      if (srcOrderNotes && dstOrderNotes) dstOrderNotes.textContent = srcOrderNotes.textContent || "";
 
-    // Inline all images as data URLs (avoid cross-origin issues)
-    const imgs = Array.from(clone.querySelectorAll("img"));
-    for (const img of imgs) {
-      const src = img.getAttribute("src");
-      if (!src) continue;
-      try {
-        const abs = new URL(src, location.href).toString();
-        const dataUrl = await toDataUrlFromUrl(abs);
-        img.setAttribute("src", dataUrl);
-      } catch {
-        // ignore
+      const srcTitle = document.querySelector("#qOrderNotesTitle");
+      const dstTitle = clone.querySelector("#qOrderNotesTitle");
+      if (srcTitle && dstTitle) dstTitle.textContent = srcTitle.textContent || "";
+
+      // Force images to load (thumbs are same-origin on GitHub Pages)
+      const imgs = Array.from(clone.querySelectorAll("img"));
+      await Promise.all(
+        imgs.map(
+          (img) =>
+            new Promise((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready.catch(() => {});
       }
-    }
 
-    // Wait for fonts and images to settle
-    if (document.fonts && document.fonts.ready) {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        await document.fonts.ready;
-      } catch {
-        // ignore
-      }
-    }
+      const canvas = await html2canvas(clone, {
+        backgroundColor: "#ffffff",
+        scale: Math.min(2, window.devicePixelRatio || 2),
+        useCORS: true,
+        allowTaint: true,
+      });
 
-    // Measure after layout
-    const height = Math.ceil(clone.scrollHeight);
+      wrap.remove();
 
-    const serializer = new XMLSerializer();
-    const html = serializer.serializeToString(clone);
-
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <foreignObject x="0" y="0" width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
-        </foreignObject>
-      </svg>
-    `.trim();
-
-    const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const svgUrl = URL.createObjectURL(svgBlob);
-
-    const image = new Image();
-    image.decoding = "async";
-    const done = new Promise((resolve, reject) => {
-      image.onload = resolve;
-      image.onerror = reject;
-    });
-    image.src = svgUrl;
-    await done;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(image, 0, 0);
-
-    URL.revokeObjectURL(svgUrl);
-    wrap.remove();
-
-    canvas.toBlob(
-      (blob) => {
+      canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -306,10 +286,12 @@ function init() {
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
-      },
-      "image/png",
-      1
-    );
+      }, "image/png");
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      alert(`导出失败：${e?.message || e}`);
+    }
   }
 
   function openImageModal(src, caption) {
