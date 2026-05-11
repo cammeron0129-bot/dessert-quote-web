@@ -220,6 +220,10 @@ function init() {
     const node = document.querySelector("#quotePaper");
     if (!node) return;
 
+    const oldBtnText = btnExportImage.textContent;
+    btnExportImage.disabled = true;
+    btnExportImage.textContent = "生成中...";
+
     try {
       const html2canvas = await ensureHtml2Canvas();
 
@@ -279,18 +283,36 @@ function init() {
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
+        // iOS Safari often blocks programmatic downloads; fallback to opening the image.
+        const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+        const isMobile = document.body.classList.contains("mobile");
+
         const a = document.createElement("a");
         a.href = url;
         a.download = `${exportName}.png`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        a.rel = "noopener";
+
+        // Try download first (desktop / Android Chrome usually works)
+        try {
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          // If on iOS/mobile, also open in new tab so user can long-press save
+          if (isIOS || isMobile) window.open(url, "_blank", "noopener,noreferrer");
+        } catch {
+          window.open(url, "_blank", "noopener,noreferrer");
+        }
+
+        // Revoke later to allow the new tab to load
+        setTimeout(() => URL.revokeObjectURL(url), 30_000);
       }, "image/png");
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
       alert(`导出失败：${e?.message || e}`);
+    } finally {
+      btnExportImage.disabled = false;
+      btnExportImage.textContent = oldBtnText;
     }
   }
 
