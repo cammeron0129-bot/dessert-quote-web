@@ -341,6 +341,46 @@ body {
   display: block;
 }
 .quoteThumb--empty { color: rgba(17,24,39,0.45); font-size: 11px; }
+
+/* Mobile quote cards */
+.quoteCard {
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.70);
+}
+.quoteCard__top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: start;
+}
+.quoteCard__left {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.quoteCard__seq {
+  font-weight: 800;
+  color: rgba(17, 24, 39, 0.72);
+  font-size: 12px;
+}
+.quoteCard__right { min-width: 0; display: grid; gap: 8px; }
+.quoteCard__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+}
+.quoteCard__field { display: grid; gap: 6px; min-width: 0; }
+.quoteCard__label { font-size: 12px; color: rgba(17, 24, 39, 0.62); font-weight: 700; }
+.quoteCard__total {
+  grid-column: 1 / -1;
+  font-weight: 900;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(17, 24, 39, 0.85);
+}
 .cellInput {
   width: 100%;
   border: 1px solid rgba(0,0,0,0.14);
@@ -390,3 +430,6 @@ body {
 body.mobile .layout { grid-template-columns: 1fr; }
 body.mobile .resizer { display: none; }
 body.mobile .panel { min-height: auto; }
+body.mobile .panel--right { padding: 10px; }
+body.mobile .paper { padding: 12px; }
+body.mobile .table { font-size: 12px; }

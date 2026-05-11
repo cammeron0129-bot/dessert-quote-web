@@ -43,6 +43,7 @@ function defaultMeta() {
     customer: "",
     contact: "",
     discountPercent: 100,
+    finalPrice: "",
     note: "不含税",
   };
 }
@@ -120,6 +121,7 @@ function init() {
   const metaCustomer = el("#metaCustomer");
   const metaContact = el("#metaContact");
   const metaDiscount = el("#metaDiscount");
+  const metaFinalPrice = el("#metaFinalPrice");
   const metaNote = el("#metaNote");
 
   const qDate = el("#qDate");
@@ -140,8 +142,41 @@ function init() {
   const modalCaption = el("#modalCaption");
 
   const btnPrint = el("#btnPrint");
+  const btnExportCsv = el("#btnExportCsv");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
+
+  function buildExportName() {
+    const date = (state.meta.date || "").trim() || "日期未填";
+    const customer = (state.meta.customer || "").trim() || "客户未填";
+    return `当夏报价单_${date}_${customer}`;
+  }
+
+  function downloadText(filename, mime, text) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCsv() {
+    const header = ["序号", "内容", "数量", "单价", "总价"];
+    const rows = state.quoteLines.map((l, idx) => {
+      const qty = toNumber(l.qty);
+      const unit = toNumber(l.unitPrice);
+      const total = qty * unit;
+      return [String(idx + 1), String(l.name || ""), String(qty), String(unit), String(total)];
+    });
+    const csv = [header, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell).replace(/\"/g, '""')}"`).join(","))
+      .join("\n");
+    downloadText(`${buildExportName()}.csv`, "text/csv;charset=utf-8", csv);
+  }
 
   function openImageModal(src, caption) {
     modalImg.src = src;
@@ -391,6 +426,7 @@ function init() {
     metaCustomer.value = state.meta.customer || "";
     metaContact.value = state.meta.contact || "";
     metaDiscount.value = String(toNumber(state.meta.discountPercent || 100));
+    metaFinalPrice.value = state.meta.finalPrice || "";
     metaNote.value = state.meta.note || "";
 
     qDate.textContent = state.meta.date || "";
@@ -406,8 +442,128 @@ function init() {
 
     quoteTbody.innerHTML = "";
     const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+    const isMobile = document.body.classList.contains("mobile");
 
     for (const line of lines) {
+      if (isMobile) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+
+        const card = document.createElement("div");
+        card.className = "quoteCard";
+
+        const top = document.createElement("div");
+        top.className = "quoteCard__top";
+
+        const left = document.createElement("div");
+        left.className = "quoteCard__left";
+
+        const seq = document.createElement("div");
+        seq.className = "quoteCard__seq";
+        seq.textContent = `#${line.seq}`;
+
+        const imgWrap = document.createElement("div");
+        const imgSrc = menuImageForLine(line);
+        const thumbSrc = line.source?.startsWith("menu:")
+          ? menuThumbForName(line.source.slice("menu:".length))
+          : null;
+        imgWrap.className = `quoteThumb ${imgSrc ? "" : "quoteThumb--empty"}`.trim();
+        if (imgSrc) {
+          const img = document.createElement("img");
+          img.src = thumbSrc || imgSrc;
+          img.alt = line.name || "图片";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.fetchPriority = "low";
+          img.addEventListener("click", () => openImageModal(imgSrc, line.name || ""));
+          imgWrap.appendChild(img);
+        } else {
+          imgWrap.textContent = "-";
+        }
+
+        left.appendChild(seq);
+        left.appendChild(imgWrap);
+
+        const right = document.createElement("div");
+        right.className = "quoteCard__right";
+
+        const nameInput = document.createElement("input");
+        nameInput.className = "cellInput";
+        nameInput.value = line.name || "";
+        nameInput.addEventListener("change", () => {
+          const target = state.quoteLines.find((x) => x.id === line.id);
+          if (!target) return;
+          target.name = nameInput.value.trim();
+          saveState(state);
+          renderQuote();
+        });
+
+        const grid = document.createElement("div");
+        grid.className = "quoteCard__grid";
+
+        const qtyInput = document.createElement("input");
+        qtyInput.className = "cellInput cellInput--num";
+        qtyInput.type = "number";
+        qtyInput.min = "0";
+        qtyInput.step = "1";
+        qtyInput.value = String(toNumber(line.qty));
+        qtyInput.addEventListener("change", () => {
+          const target = state.quoteLines.find((x) => x.id === line.id);
+          if (!target) return;
+          target.qty = clamp(toNumber(qtyInput.value), 0, 999999);
+          saveState(state);
+          renderQuote();
+        });
+
+        const unitInput = document.createElement("input");
+        unitInput.className = "cellInput cellInput--num";
+        unitInput.type = "number";
+        unitInput.min = "0";
+        unitInput.step = "0.5";
+        unitInput.value = String(toNumber(line.unitPrice));
+        unitInput.addEventListener("change", () => {
+          const target = state.quoteLines.find((x) => x.id === line.id);
+          if (!target) return;
+          target.unitPrice = clamp(toNumber(unitInput.value), 0, 999999);
+          saveState(state);
+          renderQuote();
+        });
+
+        const total = toNumber(line.qty) * toNumber(line.unitPrice);
+        const totalBox = document.createElement("div");
+        totalBox.className = "quoteCard__total";
+        totalBox.textContent = `总价：${formatMoney(total)}`;
+
+        grid.appendChild(labelWrap("数量", qtyInput));
+        grid.appendChild(labelWrap("单价", unitInput));
+        grid.appendChild(totalBox);
+
+        const del = document.createElement("button");
+        del.className = "iconBtn";
+        del.type = "button";
+        del.title = "删除此行";
+        del.textContent = "×";
+        del.addEventListener("click", () => {
+          deleteQuoteLine(line.id);
+          saveState(state);
+          renderAll();
+        });
+
+        right.appendChild(nameInput);
+        right.appendChild(grid);
+
+        top.appendChild(left);
+        top.appendChild(right);
+        top.appendChild(del);
+
+        card.appendChild(top);
+        td.appendChild(card);
+        tr.appendChild(td);
+        quoteTbody.appendChild(tr);
+        continue;
+      }
+
       const tr = document.createElement("tr");
 
       const tdSeq = document.createElement("td");
@@ -511,10 +667,23 @@ function init() {
 
     const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
     const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
-    const totalAfterDiscount = subtotal * (discountPercent / 100);
+    const computedAfterDiscount = subtotal * (discountPercent / 100);
+    const manualFinal = toNumber(state.meta.finalPrice);
+    const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
     subtotalEl.textContent = formatMoney(subtotal);
     totalAfterDiscountEl.textContent = formatMoney(totalAfterDiscount);
+  }
+
+  function labelWrap(label, input) {
+    const wrap = document.createElement("label");
+    wrap.className = "quoteCard__field";
+    const l = document.createElement("div");
+    l.className = "quoteCard__label";
+    l.textContent = label;
+    wrap.appendChild(l);
+    wrap.appendChild(input);
+    return wrap;
   }
 
   function renderAll() {
@@ -567,6 +736,7 @@ function init() {
     state.meta.customer = metaCustomer.value.trim();
     state.meta.contact = metaContact.value.trim();
     state.meta.discountPercent = clamp(toNumber(metaDiscount.value), 0, 100);
+    state.meta.finalPrice = metaFinalPrice.value.trim();
     state.meta.note = metaNote.value.trim();
     saveState(state);
     renderMeta();
@@ -585,9 +755,21 @@ function init() {
   metaCustomer.addEventListener("change", onMetaChange);
   metaContact.addEventListener("change", onMetaChange);
   metaDiscount.addEventListener("change", onMetaChange);
+  metaFinalPrice.addEventListener("change", onMetaChange);
   metaNote.addEventListener("change", onMetaChange);
 
-  btnPrint.addEventListener("click", () => window.print());
+  btnExportCsv.addEventListener("click", exportCsv);
+
+  btnPrint.addEventListener("click", () => {
+    const old = document.title;
+    document.title = buildExportName();
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = old;
+      }, 500);
+    }, 50);
+  });
 
   modalClose.addEventListener("click", closeImageModal);
   imageModal.addEventListener("click", (e) => {

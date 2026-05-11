@@ -14,7 +14,8 @@
       </div>
       <div class="topbar__actions">
         <button id="btnReset" class="btn btn--ghost" type="button">清空</button>
-        <button id="btnPrint" class="btn" type="button">打印 / 导出 PDF</button>
+        <button id="btnExportCsv" class="btn btn--ghost" type="button">导出表格</button>
+        <button id="btnPrint" class="btn" type="button">导出 PDF</button>
       </div>
     </header>
 
@@ -64,6 +65,13 @@
                 <div class="field__row">
                   <input id="metaDiscount" class="input input--num" type="number" min="0" max="100" step="0.1" />
                   <span class="field__suffix">%（例如 88 = 8.8 折）</span>
+                </div>
+              </label>
+              <label class="field">
+                <div class="field__label">优惠价（可选）</div>
+                <div class="field__row">
+                  <input id="metaFinalPrice" class="input input--num" type="number" min="0" step="1" placeholder="例如：2300" />
+                  <span class="field__suffix">元（填写后将覆盖折扣计算）</span>
                 </div>
               </label>
               <label class="field">
@@ -149,4 +157,3 @@
     <script src="./app.js"></script>
   </body>
 </html>
-
