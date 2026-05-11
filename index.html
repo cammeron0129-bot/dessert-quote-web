@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>当夏｜菜单选择 → 自动报价单</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__title">当夏烘焙</div>
+        <div class="brand__subtitle">菜单勾选 → 自动生成报价单（可打印 / 导出 PDF）</div>
+      </div>
+      <div class="topbar__actions">
+        <button id="btnReset" class="btn btn--ghost" type="button">清空</button>
+        <button id="btnPrint" class="btn" type="button">打印 / 导出 PDF</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel panel--left">
+        <div class="tabs">
+          <button class="tab tab--active" type="button" data-tab="menu">菜单</button>
+          <button class="tab" type="button" data-tab="quote">报价单</button>
+        </div>
+
+        <section class="tabpane tabpane--active" data-pane="menu">
+          <div class="controls">
+            <div class="categoryBar" id="categoryBar"></div>
+            <input id="menuSearch" class="input" type="search" placeholder="搜索产品（例如：纸杯蛋糕 / 慕斯 / 泡芙）" />
+            <div class="controls__row">
+              <label class="checkbox">
+                <input id="onlySelected" type="checkbox" />
+                仅看已选
+              </label>
+              <span class="muted" id="menuCount"></span>
+            </div>
+          </div>
+          <div id="menuList" class="list"></div>
+        </section>
+
+        <section class="tabpane" data-pane="quote">
+          <div class="controls">
+            <div class="controls__grid">
+              <label class="field">
+                <div class="field__label">日期</div>
+                <input id="metaDate" class="input" type="text" placeholder="例如：230927 / 2026-05-11" />
+              </label>
+              <label class="field">
+                <div class="field__label">地点</div>
+                <input id="metaLocation" class="input" type="text" placeholder="例如：科学城" />
+              </label>
+              <label class="field">
+                <div class="field__label">客户</div>
+                <input id="metaCustomer" class="input" type="text" placeholder="客户名称" />
+              </label>
+              <label class="field">
+                <div class="field__label">联系人 / 电话</div>
+                <input id="metaContact" class="input" type="text" placeholder="联系人（可选）" />
+              </label>
+              <label class="field">
+                <div class="field__label">折扣</div>
+                <div class="field__row">
+                  <input id="metaDiscount" class="input input--num" type="number" min="0" max="100" step="0.1" />
+                  <span class="field__suffix">%（例如 88 = 8.8 折）</span>
+                </div>
+              </label>
+              <label class="field">
+                <div class="field__label">备注</div>
+                <input id="metaNote" class="input" type="text" placeholder="例如：不含税 / 需提前一周预定" />
+              </label>
+            </div>
+            <div class="controls__row">
+              <button id="btnLoadTemplate" class="btn btn--ghost" type="button">一键载入“表2示例”</button>
+              <span class="muted">提示：你也可以只从菜单勾选生成报价行。</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <div id="sidebarResizer" class="resizer no-print" role="separator" aria-orientation="vertical" aria-label="调整菜单宽度"></div>
+
+      <section class="panel panel--right">
+        <div id="quotePaper" class="paper">
+          <div class="paper__head">
+            <div class="paper__headTop">
+              <img class="paper__logo" src="./assets/brand/logo.png" alt="当夏烘焙" />
+              <div class="paper__title">【当夏烘焙】甜品台服务 报价单</div>
+            </div>
+            <div class="paper__meta">
+              <div class="paper__metaCol">
+                <div class="paper__metaItem"><span class="k">时间：</span><span id="qDate"></span></div>
+                <div class="paper__metaItem"><span class="k">地点：</span><span id="qLocation"></span></div>
+                <div class="paper__metaItem"><span class="k">客户：</span><span id="qCustomer"></span></div>
+                <div class="paper__metaItem"><span class="k">联系人：</span><span id="qContact"></span></div>
+                <div class="paper__metaItem"><span class="k">备注：</span><span id="qNote"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <table class="table" id="quoteTable">
+            <thead>
+              <tr>
+                <th class="col--seq">序号</th>
+                <th class="col--img">图片</th>
+                <th>内容（可编辑）</th>
+                <th class="col--qty">数量</th>
+                <th class="col--price">单价</th>
+                <th class="col--price">总价</th>
+                <th class="col--act no-print"></th>
+              </tr>
+            </thead>
+            <tbody id="quoteTbody"></tbody>
+          </table>
+
+          <div class="totals">
+            <div class="totals__row">
+              <div class="totals__label">小计</div>
+              <div class="totals__value" id="subtotal"></div>
+            </div>
+            <div class="totals__row">
+              <div class="totals__label">折扣后</div>
+              <div class="totals__value" id="totalAfterDiscount"></div>
+            </div>
+          </div>
+
+          <div class="paper__foot">
+            <div class="paper__footTitle">订购说明（可在左侧“备注”里补充）</div>
+            <ol class="paper__footList">
+              <li>甜品台为预约项目，建议提前预定档期。</li>
+              <li>动物奶油易融，空调环境建议摆放 2–3 小时，请合理预约时间。</li>
+              <li>交通/摆台/撤场等费用请按实际情况另行确认。</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="imageModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop" data-close="1"></div>
+      <div class="modal__content" role="dialog" aria-modal="true" aria-label="查看图片">
+        <button id="modalClose" class="modal__close" type="button" aria-label="关闭">×</button>
+        <img id="modalImg" class="modal__img" alt="" />
+        <div id="modalCaption" class="modal__caption"></div>
+      </div>
+    </div>
+
+    <script src="./data/menu.js"></script>
+    <script src="./data/template_quote.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
