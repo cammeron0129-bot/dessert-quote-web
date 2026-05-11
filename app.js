@@ -132,7 +132,7 @@ function init() {
   const subtotalEl = el("#subtotal");
   const totalAfterDiscountEl = el("#totalAfterDiscount");
 
-  const sidebarResizer = el("#sidebarResizer");
+  const sidebarResizer = document.querySelector("#sidebarResizer");
 
   const imageModal = el("#imageModal");
   const modalClose = el("#modalClose");
@@ -528,25 +528,28 @@ function init() {
     // ignore
   }
 
-  // drag to resize sidebar
-  sidebarResizer.addEventListener("pointerdown", (e) => {
-    sidebarResizer.setPointerCapture(e.pointerId);
-    const startX = e.clientX;
-    const startW = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidebarW")) || 420;
+  // drag to resize sidebar (desktop only)
+  if (sidebarResizer) {
+    sidebarResizer.addEventListener("pointerdown", (e) => {
+      sidebarResizer.setPointerCapture(e.pointerId);
+      const startX = e.clientX;
+      const startW =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidebarW")) || 420;
 
-    const onMove = (ev) => {
-      const dx = ev.clientX - startX;
-      applySidebarWidth(startW + dx);
-    };
-    const onUp = () => {
-      sidebarResizer.removeEventListener("pointermove", onMove);
-      sidebarResizer.removeEventListener("pointerup", onUp);
-      sidebarResizer.removeEventListener("pointercancel", onUp);
-    };
-    sidebarResizer.addEventListener("pointermove", onMove);
-    sidebarResizer.addEventListener("pointerup", onUp);
-    sidebarResizer.addEventListener("pointercancel", onUp);
-  });
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        applySidebarWidth(startW + dx);
+      };
+      const onUp = () => {
+        sidebarResizer.removeEventListener("pointermove", onMove);
+        sidebarResizer.removeEventListener("pointerup", onUp);
+        sidebarResizer.removeEventListener("pointercancel", onUp);
+      };
+      sidebarResizer.addEventListener("pointermove", onMove);
+      sidebarResizer.addEventListener("pointerup", onUp);
+      sidebarResizer.addEventListener("pointercancel", onUp);
+    });
+  }
 
   function onMetaChange() {
     state.meta.date = metaDate.value.trim();
