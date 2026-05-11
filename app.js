@@ -215,6 +215,165 @@ function init() {
     return 794;
   }
 
+  function buildExportNode(width) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "paper";
+    wrapper.style.width = `${width}px`;
+    wrapper.style.borderRadius = "0";
+    wrapper.style.boxShadow = "none";
+    wrapper.style.minHeight = "auto";
+
+    const head = document.createElement("div");
+    head.className = "paper__head";
+
+    const headTop = document.createElement("div");
+    headTop.className = "paper__headTop";
+
+    const logo = document.createElement("img");
+    logo.className = "paper__logo";
+    logo.alt = "当夏烘焙";
+    logo.src = "./assets/brand/logo.png";
+
+    const title = document.createElement("div");
+    title.className = "paper__title";
+    title.textContent = "【当夏烘焙】甜品台服务 报价单";
+
+    headTop.appendChild(logo);
+    headTop.appendChild(title);
+
+    const meta = document.createElement("div");
+    meta.className = "paper__meta";
+    const metaCol = document.createElement("div");
+    metaCol.className = "paper__metaCol";
+
+    const metaItems = [
+      ["时间：", state.meta.date || ""],
+      ["地点：", state.meta.location || ""],
+      ["客户：", state.meta.customer || ""],
+      ["联系人：", state.meta.contact || ""],
+      ["备注：", state.meta.note || ""],
+    ];
+    for (const [k, v] of metaItems) {
+      const item = document.createElement("div");
+      item.className = "paper__metaItem";
+      const ks = document.createElement("span");
+      ks.className = "k";
+      ks.textContent = k;
+      const vs = document.createElement("span");
+      vs.textContent = v;
+      item.appendChild(ks);
+      item.appendChild(vs);
+      metaCol.appendChild(item);
+    }
+    meta.appendChild(metaCol);
+
+    head.appendChild(headTop);
+    head.appendChild(meta);
+    wrapper.appendChild(head);
+
+    const table = document.createElement("table");
+    table.className = "table";
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+      <tr>
+        <th class="col--seq">序号</th>
+        <th class="col--img">图片</th>
+        <th>内容</th>
+        <th class="col--qty">数量</th>
+        <th class="col--price">单价</th>
+        <th class="col--price">总价</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+
+    state.quoteLines.forEach((l, idx) => {
+      const tr = document.createElement("tr");
+      const qty = toNumber(l.qty);
+      const unit = toNumber(l.unitPrice);
+      const total = qty * unit;
+
+      const tdSeq = document.createElement("td");
+      tdSeq.className = "num";
+      tdSeq.textContent = String(idx + 1);
+
+      const tdImg = document.createElement("td");
+      const imgWrap = document.createElement("div");
+      const imgSrc = menuImageForLine(l);
+      const thumbSrc = l.source?.startsWith("menu:")
+        ? menuThumbForName(l.source.slice("menu:".length))
+        : null;
+      imgWrap.className = `quoteThumb ${imgSrc ? "" : "quoteThumb--empty"}`.trim();
+      if (imgSrc) {
+        const img = document.createElement("img");
+        img.src = thumbSrc || imgSrc;
+        img.alt = l.name || "图片";
+        tdImg.appendChild(imgWrap);
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.textContent = "-";
+        tdImg.appendChild(imgWrap);
+      }
+
+      const tdName = document.createElement("td");
+      tdName.textContent = l.name || "";
+
+      const tdQty = document.createElement("td");
+      tdQty.className = "num";
+      tdQty.textContent = String(qty);
+
+      const tdUnit = document.createElement("td");
+      tdUnit.className = "num";
+      tdUnit.textContent = formatMoney(unit);
+
+      const tdTotal = document.createElement("td");
+      tdTotal.className = "num";
+      tdTotal.textContent = formatMoney(total);
+
+      tr.appendChild(tdSeq);
+      tr.appendChild(tdImg);
+      tr.appendChild(tdName);
+      tr.appendChild(tdQty);
+      tr.appendChild(tdUnit);
+      tr.appendChild(tdTotal);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+
+    const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+    const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
+    const computedAfterDiscount = subtotal * (discountPercent / 100);
+    const manualFinal = toNumber(state.meta.finalPrice);
+    const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
+
+    const totals = document.createElement("div");
+    totals.className = "totals";
+    totals.innerHTML = `
+      <div class="totals__row"><div class="totals__label">小计</div><div class="totals__value">${formatMoney(subtotal)}</div></div>
+      <div class="totals__row"><div class="totals__label">折扣后</div><div class="totals__value">${formatMoney(totalAfterDiscount)}</div></div>
+    `;
+    wrapper.appendChild(totals);
+
+    const foot = document.createElement("div");
+    foot.className = "paper__foot";
+
+    const footTitle = document.createElement("div");
+    footTitle.className = "paper__footTitle";
+    footTitle.textContent = state.meta.orderNotesTitle || "订购说明";
+    foot.appendChild(footTitle);
+
+    const notes = document.createElement("div");
+    notes.className = "orderNotes";
+    notes.textContent = state.meta.orderNotes || "";
+    foot.appendChild(notes);
+
+    wrapper.appendChild(foot);
+
+    return wrapper;
+  }
+
   async function exportLongPng() {
     const exportName = buildExportName();
     const node = document.querySelector("#quotePaper");
@@ -227,8 +386,9 @@ function init() {
     try {
       const html2canvas = await ensureHtml2Canvas();
 
-      // Clone to avoid affecting on-screen layout
-      const clone = node.cloneNode(true);
+      // Build a lightweight export node (avoid heavy inputs/layout that can hang on mobile)
+      const width = computeExportWidth();
+      const clone = buildExportNode(width);
       const wrap = document.createElement("div");
       wrap.style.position = "fixed";
       wrap.style.left = "-10000px";
@@ -238,21 +398,6 @@ function init() {
       wrap.style.overflow = "hidden";
       wrap.appendChild(clone);
       document.body.appendChild(wrap);
-
-      const width = computeExportWidth();
-      clone.style.width = `${width}px`;
-      clone.style.borderRadius = "0";
-      clone.style.boxShadow = "none";
-      clone.style.minHeight = "auto";
-
-      // Ensure editable blocks keep their text
-      const srcOrderNotes = document.querySelector("#qOrderNotes");
-      const dstOrderNotes = clone.querySelector("#qOrderNotes");
-      if (srcOrderNotes && dstOrderNotes) dstOrderNotes.textContent = srcOrderNotes.textContent || "";
-
-      const srcTitle = document.querySelector("#qOrderNotesTitle");
-      const dstTitle = clone.querySelector("#qOrderNotesTitle");
-      if (srcTitle && dstTitle) dstTitle.textContent = srcTitle.textContent || "";
 
       // Force images to load (thumbs are same-origin on GitHub Pages)
       const imgs = Array.from(clone.querySelectorAll("img"));
@@ -271,12 +416,20 @@ function init() {
         await document.fonts.ready.catch(() => {});
       }
 
-      const canvas = await html2canvas(clone, {
-        backgroundColor: "#ffffff",
-        scale: Math.min(2, window.devicePixelRatio || 2),
-        useCORS: true,
-        allowTaint: true,
-      });
+      const isMobile = document.body.classList.contains("mobile");
+      const scale = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 2);
+
+      const timeoutMs = isMobile ? 25_000 : 35_000;
+      const canvas = await Promise.race([
+        html2canvas(clone, {
+          backgroundColor: "#ffffff",
+          scale,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("生成超时（可尝试减少报价行或在电脑端导出）")), timeoutMs)),
+      ]);
 
       wrap.remove();
 
