@@ -150,6 +150,7 @@ function init() {
 
   const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
+  const btnScreenshot = el("#btnScreenshot");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
 
@@ -206,6 +207,64 @@ function init() {
       document.head.appendChild(s);
     });
     return window.html2canvas;
+  }
+
+  function finishDownloadPng(exportName, blobOrUrl) {
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    const isMobile = document.body.classList.contains("mobile");
+
+    const url = typeof blobOrUrl === "string" ? blobOrUrl : URL.createObjectURL(blobOrUrl);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${exportName}.png`;
+    a.rel = "noopener";
+    try {
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (isIOS || isMobile) window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+
+  async function exportScreenshotPng() {
+    const exportName = `${buildExportName()}_截图`;
+    const node = document.querySelector("#quotePaper");
+    if (!node) return;
+
+    const oldBtnText = btnScreenshot.textContent;
+    btnScreenshot.disabled = true;
+    btnScreenshot.textContent = "截图中...";
+
+    try {
+      const html2canvas = await ensureHtml2Canvas();
+      const rect = node.getBoundingClientRect();
+      const width = Math.floor(rect.width);
+      const height = Math.floor(rect.height);
+      const scale = document.body.classList.contains("mobile") ? 1 : Math.min(2, window.devicePixelRatio || 2);
+
+      const canvas = await html2canvas(node, {
+        backgroundColor: "#ffffff",
+        scale,
+        width,
+        height,
+        logging: false,
+      });
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        finishDownloadPng(exportName, blob);
+      }, "image/png");
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      alert(`截图导出失败：${e?.message || e}`);
+    } finally {
+      btnScreenshot.disabled = false;
+      btnScreenshot.textContent = oldBtnText;
+    }
   }
 
   function computeExportWidth() {
@@ -435,29 +494,7 @@ function init() {
 
       canvas.toBlob((blob) => {
         if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        // iOS Safari often blocks programmatic downloads; fallback to opening the image.
-        const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
-        const isMobile = document.body.classList.contains("mobile");
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${exportName}.png`;
-        a.rel = "noopener";
-
-        // Try download first (desktop / Android Chrome usually works)
-        try {
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          // If on iOS/mobile, also open in new tab so user can long-press save
-          if (isIOS || isMobile) window.open(url, "_blank", "noopener,noreferrer");
-        } catch {
-          window.open(url, "_blank", "noopener,noreferrer");
-        }
-
-        // Revoke later to allow the new tab to load
-        setTimeout(() => URL.revokeObjectURL(url), 30_000);
+        finishDownloadPng(exportName, blob);
       }, "image/png");
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -1070,6 +1107,7 @@ function init() {
   });
 
   btnExportCsv.addEventListener("click", exportCsv);
+  btnScreenshot.addEventListener("click", exportScreenshotPng);
 
   btnExportImage.addEventListener("click", exportLongPng);
 
