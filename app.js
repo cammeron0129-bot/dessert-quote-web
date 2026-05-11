@@ -47,6 +47,7 @@ function defaultMeta() {
     note: "不含税",
     orderNotes:
       "1. 甜品台为预约项目，建议提前预定档期。\n2. 动物奶油易融，空调环境建议摆放 2–3 小时，请合理预约时间。\n3. 交通/摆台/撤场等费用请按实际情况另行确认。",
+    orderNotesTitle: "订购说明（可编辑）",
   };
 }
 
@@ -126,12 +127,14 @@ function init() {
   const metaFinalPrice = el("#metaFinalPrice");
   const metaNote = el("#metaNote");
   const metaOrderNotes = el("#metaOrderNotes");
+  const metaOrderNotesTitle = el("#metaOrderNotesTitle");
 
   const qDate = el("#qDate");
   const qLocation = el("#qLocation");
   const qCustomer = el("#qCustomer");
   const qContact = el("#qContact");
   const qNote = el("#qNote");
+  const qOrderNotesTitle = el("#qOrderNotesTitle");
   const qOrderNotes = el("#qOrderNotes");
 
   const quoteTbody = el("#quoteTbody");
@@ -145,7 +148,7 @@ function init() {
   const modalImg = el("#modalImg");
   const modalCaption = el("#modalCaption");
 
-  const btnPrint = el("#btnPrint");
+  const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
@@ -180,6 +183,133 @@ function init() {
       .map((r) => r.map((cell) => `"${String(cell).replace(/\"/g, '""')}"`).join(","))
       .join("\n");
     downloadText(`${buildExportName()}.csv`, "text/csv;charset=utf-8", csv);
+  }
+
+  async function toDataUrlFromUrl(url) {
+    const res = await fetch(url, { cache: "force-cache" });
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function computeExportWidth() {
+    // Desktop: A4-ish width at 96dpi (794px). Mobile: fit screen width.
+    const isMobile = document.body.classList.contains("mobile");
+    if (isMobile) return Math.max(360, Math.floor(window.innerWidth - 24));
+    return 794;
+  }
+
+  async function exportLongPng() {
+    const exportName = buildExportName();
+    const node = document.querySelector("#quotePaper");
+    if (!node) return;
+
+    // Clone to avoid affecting on-screen layout
+    const clone = node.cloneNode(true);
+    const wrap = document.createElement("div");
+    wrap.style.position = "fixed";
+    wrap.style.left = "-10000px";
+    wrap.style.top = "0";
+    wrap.style.width = "0";
+    wrap.style.height = "0";
+    wrap.style.overflow = "hidden";
+    wrap.appendChild(clone);
+    document.body.appendChild(wrap);
+
+    const width = computeExportWidth();
+    clone.style.width = `${width}px`;
+    clone.style.borderRadius = "0";
+    clone.style.boxShadow = "none";
+    clone.style.minHeight = "auto";
+
+    // Ensure editable blocks keep their text
+    const srcOrderNotes = document.querySelector("#qOrderNotes");
+    const dstOrderNotes = clone.querySelector("#qOrderNotes");
+    if (srcOrderNotes && dstOrderNotes) dstOrderNotes.textContent = srcOrderNotes.textContent || "";
+
+    const srcTitle = document.querySelector("#qOrderNotesTitle");
+    const dstTitle = clone.querySelector("#qOrderNotesTitle");
+    if (srcTitle && dstTitle) dstTitle.textContent = srcTitle.textContent || "";
+
+    // Inline all images as data URLs (avoid cross-origin issues)
+    const imgs = Array.from(clone.querySelectorAll("img"));
+    for (const img of imgs) {
+      const src = img.getAttribute("src");
+      if (!src) continue;
+      try {
+        const abs = new URL(src, location.href).toString();
+        const dataUrl = await toDataUrlFromUrl(abs);
+        img.setAttribute("src", dataUrl);
+      } catch {
+        // ignore
+      }
+    }
+
+    // Wait for fonts and images to settle
+    if (document.fonts && document.fonts.ready) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await document.fonts.ready;
+      } catch {
+        // ignore
+      }
+    }
+
+    // Measure after layout
+    const height = Math.ceil(clone.scrollHeight);
+
+    const serializer = new XMLSerializer();
+    const html = serializer.serializeToString(clone);
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <foreignObject x="0" y="0" width="100%" height="100%">
+          <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
+        </foreignObject>
+      </svg>
+    `.trim();
+
+    const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    const image = new Image();
+    image.decoding = "async";
+    const done = new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+    });
+    image.src = svgUrl;
+    await done;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(image, 0, 0);
+
+    URL.revokeObjectURL(svgUrl);
+    wrap.remove();
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${exportName}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      },
+      "image/png",
+      1
+    );
   }
 
   function openImageModal(src, caption) {
@@ -433,6 +563,7 @@ function init() {
     metaFinalPrice.value = state.meta.finalPrice || "";
     metaNote.value = state.meta.note || "";
     metaOrderNotes.value = state.meta.orderNotes || "";
+    metaOrderNotesTitle.value = state.meta.orderNotesTitle || "";
 
     qDate.textContent = state.meta.date || "";
     qLocation.textContent = state.meta.location || "";
@@ -440,6 +571,7 @@ function init() {
     qContact.textContent = state.meta.contact || "";
     qNote.textContent = state.meta.note || "";
     qOrderNotes.textContent = state.meta.orderNotes || "";
+    qOrderNotesTitle.textContent = state.meta.orderNotesTitle || "订购说明（可编辑）";
   }
 
   function renderQuote() {
@@ -745,6 +877,7 @@ function init() {
     state.meta.finalPrice = metaFinalPrice.value.trim();
     state.meta.note = metaNote.value.trim();
     state.meta.orderNotes = metaOrderNotes.value || "";
+    state.meta.orderNotesTitle = metaOrderNotesTitle.value.trim() || "";
     saveState(state);
     renderMeta();
     renderQuote();
@@ -765,6 +898,7 @@ function init() {
   metaFinalPrice.addEventListener("change", onMetaChange);
   metaNote.addEventListener("change", onMetaChange);
   metaOrderNotes.addEventListener("change", onMetaChange);
+  metaOrderNotesTitle.addEventListener("change", onMetaChange);
 
   qOrderNotes.addEventListener("input", () => {
     state.meta.orderNotes = qOrderNotes.textContent || "";
@@ -772,18 +906,15 @@ function init() {
     saveState(state);
   });
 
+  qOrderNotesTitle.addEventListener("input", () => {
+    state.meta.orderNotesTitle = qOrderNotesTitle.textContent || "";
+    metaOrderNotesTitle.value = state.meta.orderNotesTitle;
+    saveState(state);
+  });
+
   btnExportCsv.addEventListener("click", exportCsv);
 
-  btnPrint.addEventListener("click", () => {
-    const old = document.title;
-    document.title = buildExportName();
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.title = old;
-      }, 500);
-    }, 50);
-  });
+  btnExportImage.addEventListener("click", exportLongPng);
 
   modalClose.addEventListener("click", closeImageModal);
   imageModal.addEventListener("click", (e) => {

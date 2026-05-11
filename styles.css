@@ -407,6 +407,16 @@ body {
 
 .paper__foot { margin-top: 14px; border-top: 1px dashed rgba(0,0,0,0.18); padding-top: 12px; }
 .paper__footTitle { font-weight: 800; margin-bottom: 6px; font-size: 12px; }
+.paper__footTitle[contenteditable="true"] {
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.55);
+}
+.paper__footTitle[contenteditable="true"]:empty::before {
+  content: "点击编辑标题";
+  color: rgba(17, 24, 39, 0.45);
+}
 .paper__footList { margin: 0; padding-left: 18px; font-size: 11px; color: rgba(17,24,39,0.75); }
 .orderNotes {
   border: 1px solid rgba(0, 0, 0, 0.10);
