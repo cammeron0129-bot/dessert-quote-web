@@ -329,7 +329,7 @@ function init() {
     }
   }
 
-  function finishDownloadPng(exportName, blobOrUrl, preparedWindow) {
+  async function finishDownloadPng(exportName, blobOrUrl, preparedWindow) {
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const isMobile = document.body.classList.contains("mobile");
 
@@ -337,9 +337,23 @@ function init() {
 
     // 移动端/IOS：优先使用“预先打开的窗口”承接 Blob URL，避免弹窗/下载被浏览器拦截。
     if (preparedWindow) {
-      const ok = renderExportWindow(preparedWindow, exportName, url);
+      // iOS 某些情况下跨窗口加载 blob: 会出现空白；优先转成 dataURL 再展示
+      let displayUrl = url;
+      if (typeof blobOrUrl !== "string") {
+        try {
+          // 小尺寸转 dataURL（避免内存炸），超大图仍用 blob
+          if (blobOrUrl.size < 6_000_000) {
+            displayUrl = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.readAsDataURL(blobOrUrl);
+            });
+          }
+        } catch {}
+      }
+      const ok = renderExportWindow(preparedWindow, exportName, displayUrl);
       if (ok) {
-        if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 120_000);
         return;
       }
     }
@@ -600,7 +614,7 @@ function init() {
       await drawAll(ctx);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("图片生成失败（blob 为空）");
-      finishDownloadPng(exportName, blob, preparedWindow);
+      await finishDownloadPng(exportName, blob, preparedWindow);
       return;
     }
 
@@ -627,7 +641,7 @@ function init() {
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("图片生成失败（blob 为空）");
       // 第 1 张用 preparedWindow，其余按普通下载/新开页
-      finishDownloadPng(`${exportName}_${s + 1}`, blob, s === 0 ? preparedWindow : null);
+      await finishDownloadPng(`${exportName}_${s + 1}`, blob, s === 0 ? preparedWindow : null);
       // 避免连续触发被浏览器拦截
       await new Promise((r) => setTimeout(r, 500));
     }
