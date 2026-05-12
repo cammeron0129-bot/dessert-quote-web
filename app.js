@@ -209,26 +209,6 @@ function init() {
     return window.html2canvas;
   }
 
-  function finishDownloadPng(exportName, blobOrUrl) {
-    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
-    const isMobile = document.body.classList.contains("mobile");
-
-    const url = typeof blobOrUrl === "string" ? blobOrUrl : URL.createObjectURL(blobOrUrl);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${exportName}.png`;
-    a.rel = "noopener";
-    try {
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      if (isIOS || isMobile) window.open(url, "_blank", "noopener,noreferrer");
-    } catch {
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-    if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
-  }
-
   function wrapTextCJK(ctx, text, maxWidth) {
     const s = String(text || "");
     if (!s) return [""];
@@ -248,18 +228,102 @@ function init() {
 
   async function loadImageBitmap(url) {
     const abs = new URL(url, location.href).toString();
-    const res = await fetch(abs, { cache: "force-cache" });
-    const blob = await res.blob();
-    if ("createImageBitmap" in window) return await createImageBitmap(blob);
-    return await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = URL.createObjectURL(blob);
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+      const res = await fetch(abs, { cache: "force-cache", signal: controller.signal });
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) throw new Error("图片为空");
+
+      // iOS/Safari 对 createImageBitmap 支持不稳定，优先走 Image 解码，避免“生成中卡住”。
+      const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+      if (!isIOS && "createImageBitmap" in window) return await createImageBitmap(blob);
+
+      return await new Promise((resolve, reject) => {
+        const objUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        const t = setTimeout(() => {
+          try {
+            URL.revokeObjectURL(objUrl);
+          } catch {}
+          reject(new Error("图片解码超时"));
+        }, 10_000);
+        img.onload = () => {
+          clearTimeout(t);
+          resolve(img);
+          setTimeout(() => {
+            try {
+              URL.revokeObjectURL(objUrl);
+            } catch {}
+          }, 30_000);
+        };
+        img.onerror = () => {
+          clearTimeout(t);
+          reject(new Error("图片加载失败"));
+          setTimeout(() => {
+            try {
+              URL.revokeObjectURL(objUrl);
+            } catch {}
+          }, 30_000);
+        };
+        img.src = objUrl;
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  async function renderQuoteToPng({ width, exportName }) {
+  function prepareExportWindow(exportName) {
+    const isMobile = document.body.classList.contains("mobile");
+    if (!isMobile) return null;
+    try {
+      const w = window.open("about:blank", "_blank", "noopener,noreferrer");
+      if (!w) return null;
+      w.document.title = `${exportName}.png`;
+      w.document.body.style.margin = "0";
+      w.document.body.style.fontFamily =
+        "ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+      w.document.body.innerHTML = `<div style="padding:16px">正在生成图片，请稍等…</div>`;
+      return w;
+    } catch {
+      return null;
+    }
+  }
+
+  function finishDownloadPng(exportName, blobOrUrl, preparedWindow) {
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    const isMobile = document.body.classList.contains("mobile");
+
+    const url = typeof blobOrUrl === "string" ? blobOrUrl : URL.createObjectURL(blobOrUrl);
+
+    // 移动端/IOS：优先使用“预先打开的窗口”承接 Blob URL，避免弹窗/下载被浏览器拦截。
+    if (preparedWindow) {
+      try {
+        preparedWindow.location.href = url;
+        if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
+        return;
+      } catch {
+        // fallback to default flow
+      }
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${exportName}.png`;
+    a.rel = "noopener";
+    try {
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (isIOS || isMobile) window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+
+  async function renderQuoteToPng({ width, exportName, preparedWindow }) {
     const isMobile = document.body.classList.contains("mobile");
 
     const pad = 16;
@@ -308,151 +372,193 @@ function init() {
     const totalsH = 60;
     const fullH = headerH + tableH + totalsH + 18 + notesH + 20;
 
-    const canvas = document.createElement("canvas");
     const scale = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 2);
-    canvas.width = Math.floor(width * scale);
-    canvas.height = Math.floor(fullH * scale);
-    const ctx = canvas.getContext("2d");
-    ctx.scale(scale, scale);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, fullH);
+    const drawAll = async (ctx) => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, fullH);
 
-    // Header
-    ctx.font = "18px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
-    ctx.fillStyle = brand;
-    ctx.fillText("【当夏烘焙】甜品台服务 报价单", pad + 72, 30);
-    try {
-      const logo = await loadImageBitmap("./assets/brand/logo.png");
-      ctx.drawImage(logo, pad, 6, 64, 48);
-    } catch {}
-
-    ctx.strokeStyle = border;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(pad, 52);
-    ctx.lineTo(width - pad, 52);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.font = fontSmall;
-    const meta = [
-      ["时间：", state.meta.date || ""],
-      ["地点：", state.meta.location || ""],
-      ["客户：", state.meta.customer || ""],
-      ["联系人：", state.meta.contact || ""],
-      ["备注：", state.meta.note || ""],
-    ];
-    let my = 74;
-    for (const [k, v] of meta) {
-      ctx.fillStyle = muted;
-      ctx.fillText(k, pad, my);
+      // Header
+      ctx.font = "18px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
       ctx.fillStyle = brand;
-      ctx.fillText(v, pad + 44, my);
-      my += 18;
-    }
+      ctx.fillText("【当夏烘焙】甜品台服务 报价单", pad + 72, 30);
+      try {
+        const logo = await loadImageBitmap("./assets/brand/logo.png");
+        ctx.drawImage(logo, pad, 6, 64, 48);
+      } catch {}
 
-    // Table head
-    let y = headerH;
-    ctx.strokeStyle = border;
-    ctx.beginPath();
-    ctx.moveTo(pad, y);
-    ctx.lineTo(width - pad, y);
-    ctx.stroke();
-    y += 8;
-    ctx.fillStyle = muted;
-    ctx.fillText("序号", pad, y + 12);
-    ctx.fillText("图片", pad + 52, y + 12);
-    ctx.fillText("内容", pad + 52 + imgSize + 10, y + 12);
-    ctx.fillText("数量", width - pad - 190, y + 12);
-    ctx.fillText("单价", width - pad - 130, y + 12);
-    ctx.fillText("总价", width - pad - 70, y + 12);
-    y += 22;
+      ctx.strokeStyle = border;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pad, 52);
+      ctx.lineTo(width - pad, 52);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    for (let i = 0; i < lines.length; i += 1) {
-      const l = lines[i];
-      const h = rowHeights[i];
+      ctx.font = fontSmall;
+      const meta = [
+        ["时间：", state.meta.date || ""],
+        ["地点：", state.meta.location || ""],
+        ["客户：", state.meta.customer || ""],
+        ["联系人：", state.meta.contact || ""],
+        ["备注：", state.meta.note || ""],
+      ];
+      let my = 74;
+      for (const [k, v] of meta) {
+        ctx.fillStyle = muted;
+        ctx.fillText(k, pad, my);
+        ctx.fillStyle = brand;
+        ctx.fillText(v, pad + 44, my);
+        my += 18;
+      }
+
+      // Table head
+      let y = headerH;
+      ctx.strokeStyle = border;
+      ctx.beginPath();
+      ctx.moveTo(pad, y);
+      ctx.lineTo(width - pad, y);
+      ctx.stroke();
+      y += 8;
+      ctx.fillStyle = muted;
+      ctx.fillText("序号", pad, y + 12);
+      ctx.fillText("图片", pad + 52, y + 12);
+      ctx.fillText("内容", pad + 52 + imgSize + 10, y + 12);
+      ctx.fillText("数量", width - pad - 190, y + 12);
+      ctx.fillText("单价", width - pad - 130, y + 12);
+      ctx.fillText("总价", width - pad - 70, y + 12);
+      y += 22;
+
+      for (let i = 0; i < lines.length; i += 1) {
+        const l = lines[i];
+        const h = rowHeights[i];
+        ctx.strokeStyle = border;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(width - pad, y);
+        ctx.stroke();
+
+        const cy = y + 10;
+        ctx.fillStyle = brand;
+        ctx.fillText(String(l.seq), pad, cy + 12);
+
+        ctx.strokeRect(pad + 46, cy, imgSize, imgSize);
+        const bm = bitmaps[i];
+        if (bm) ctx.drawImage(bm, pad + 46, cy, imgSize, imgSize);
+
+        const nx = pad + 46 + imgSize + 10;
+        const nameLines = wrapTextCJK(ctx, l.name || "", nameW);
+        let ty = cy + 12;
+        for (const ln of nameLines.slice(0, 6)) {
+          ctx.fillText(ln, nx, ty);
+          ty += 16;
+        }
+
+        const qty = toNumber(l.qty);
+        const unit = toNumber(l.unitPrice);
+        const total = qty * unit;
+        ctx.textAlign = "right";
+        ctx.fillText(String(qty), width - pad - 168, cy + 12);
+        ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
+        ctx.fillText(formatMoney(total), width - pad, cy + 12);
+        ctx.textAlign = "left";
+
+        y += h;
+      }
       ctx.strokeStyle = border;
       ctx.beginPath();
       ctx.moveTo(pad, y);
       ctx.lineTo(width - pad, y);
       ctx.stroke();
 
-      const cy = y + 10;
-      ctx.fillStyle = brand;
-      ctx.fillText(String(l.seq), pad, cy + 12);
+      const subtotal = state.quoteLines.reduce(
+        (sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice),
+        0
+      );
+      const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
+      const computedAfterDiscount = subtotal * (discountPercent / 100);
+      const manualFinal = toNumber(state.meta.finalPrice);
+      const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
-      ctx.strokeRect(pad + 46, cy, imgSize, imgSize);
-      const bm = bitmaps[i];
-      if (bm) ctx.drawImage(bm, pad + 46, cy, imgSize, imgSize);
-
-      const nx = pad + 46 + imgSize + 10;
-      const nameLines = wrapTextCJK(ctx, l.name || "", nameW);
-      let ty = cy + 12;
-      for (const ln of nameLines.slice(0, 6)) {
-        ctx.fillText(ln, nx, ty);
-        ty += 16;
-      }
-
-      const qty = toNumber(l.qty);
-      const unit = toNumber(l.unitPrice);
-      const total = qty * unit;
+      y += 22;
+      ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+      ctx.fillStyle = muted;
       ctx.textAlign = "right";
-      ctx.fillText(String(qty), width - pad - 168, cy + 12);
-      ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
-      ctx.fillText(formatMoney(total), width - pad, cy + 12);
+      ctx.fillText("小计：", width - pad - 120, y);
+      ctx.fillStyle = brand;
+      ctx.fillText(formatMoney(subtotal), width - pad, y);
+      y += 20;
+      ctx.fillStyle = muted;
+      ctx.fillText("折扣后：", width - pad - 120, y);
+      ctx.fillStyle = brand;
+      ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
       ctx.textAlign = "left";
 
-      y += h;
-    }
-    ctx.strokeStyle = border;
-    ctx.beginPath();
-    ctx.moveTo(pad, y);
-    ctx.lineTo(width - pad, y);
-    ctx.stroke();
+      y += 18;
+      ctx.strokeStyle = border;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pad, y);
+      ctx.lineTo(width - pad, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
-    const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
-    const computedAfterDiscount = subtotal * (discountPercent / 100);
-    const manualFinal = toNumber(state.meta.finalPrice);
-    const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
+      y += 18;
+      ctx.font = fontSmall;
+      ctx.fillStyle = brand;
+      ctx.fillText(state.meta.orderNotesTitle || "订购说明", pad, y);
+      y += 18;
+      ctx.fillStyle = muted;
+      for (const ln of notesLines) {
+        ctx.fillText(ln, pad, y);
+        y += 14;
+        if (y > fullH - 10) break;
+      }
+    };
 
-    y += 22;
-    ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
-    ctx.fillStyle = muted;
-    ctx.textAlign = "right";
-    ctx.fillText("小计：", width - pad - 120, y);
-    ctx.fillStyle = brand;
-    ctx.fillText(formatMoney(subtotal), width - pad, y);
-    y += 20;
-    ctx.fillStyle = muted;
-    ctx.fillText("折扣后：", width - pad - 120, y);
-    ctx.fillStyle = brand;
-    ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
-    ctx.textAlign = "left";
+    const maxCanvasPx = isMobile ? 12_000 : 32_000;
+    const targetCanvasHeightPx = Math.floor(fullH * scale);
+    const tooTall = targetCanvasHeightPx > maxCanvasPx;
 
-    y += 18;
-    ctx.strokeStyle = border;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(pad, y);
-    ctx.lineTo(width - pad, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    y += 18;
-    ctx.font = fontSmall;
-    ctx.fillStyle = brand;
-    ctx.fillText(state.meta.orderNotesTitle || "订购说明", pad, y);
-    y += 18;
-    ctx.fillStyle = muted;
-    for (const ln of notesLines) {
-      ctx.fillText(ln, pad, y);
-      y += 14;
-      if (y > fullH - 10) break;
+    if (!tooTall) {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.floor(width * scale);
+      canvas.height = targetCanvasHeightPx;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+      await drawAll(ctx);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("图片生成失败（blob 为空）");
+      finishDownloadPng(exportName, blob, preparedWindow);
+      return;
     }
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-    finishDownloadPng(exportName, blob);
+    // 超过移动端 Canvas 高度限制：按固定宽度分段导出多张图
+    const sliceH = Math.floor(maxCanvasPx / scale);
+    const totalSlices = Math.ceil(fullH / sliceH);
+    alert(`内容较长，手机浏览器限制将分 ${totalSlices} 张导出（宽度不变）。`);
+
+    for (let s = 0; s < totalSlices; s += 1) {
+      const offsetY = s * sliceH;
+      const curH = Math.min(sliceH, fullH - offsetY);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.floor(width * scale);
+      canvas.height = Math.floor(curH * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, width, curH);
+      ctx.clip();
+      ctx.translate(0, -offsetY);
+      await drawAll(ctx);
+      ctx.restore();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("图片生成失败（blob 为空）");
+      // 第 1 张用 preparedWindow，其余按普通下载/新开页
+      finishDownloadPng(`${exportName}_${s + 1}`, blob, s === 0 ? preparedWindow : null);
+      // 避免连续触发被浏览器拦截
+      await new Promise((r) => setTimeout(r, 500));
+    }
   }
 
   async function exportScreenshotPng() {
@@ -463,15 +569,19 @@ function init() {
     const oldBtnText = btnScreenshot.textContent;
     btnScreenshot.disabled = true;
     btnScreenshot.textContent = "截图中...";
+    const preparedWindow = prepareExportWindow(exportName);
 
     try {
       const rect = node.getBoundingClientRect();
       const width = Math.floor(rect.width);
-      await renderQuoteToPng({ width, exportName });
+      await renderQuoteToPng({ width, exportName, preparedWindow });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
       alert(`截图导出失败：${e?.message || e}`);
+      try {
+        if (preparedWindow) preparedWindow.close();
+      } catch {}
     } finally {
       btnScreenshot.disabled = false;
       btnScreenshot.textContent = oldBtnText;
@@ -652,14 +762,18 @@ function init() {
     const oldBtnText = btnExportImage.textContent;
     btnExportImage.disabled = true;
     btnExportImage.textContent = "生成中...";
+    const preparedWindow = prepareExportWindow(exportName);
 
     try {
       const width = computeExportWidth();
-      await renderQuoteToPng({ width, exportName });
+      await renderQuoteToPng({ width, exportName, preparedWindow });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
       alert(`导出失败：${e?.message || e}`);
+      try {
+        if (preparedWindow) preparedWindow.close();
+      } catch {}
     } finally {
       btnExportImage.disabled = false;
       btnExportImage.textContent = oldBtnText;
