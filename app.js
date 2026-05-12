@@ -291,6 +291,44 @@ function init() {
     }
   }
 
+  function renderExportWindow(preparedWindow, exportName, url) {
+    if (!preparedWindow) return false;
+    try {
+      preparedWindow.document.title = `${exportName}.png`;
+      preparedWindow.document.body.style.margin = "0";
+      preparedWindow.document.body.innerHTML = `
+        <div style="padding:12px; font-size:14px; color:#111827">
+          <div style="margin-bottom:8px">已生成图片（iPhone：长按图片→存储到照片 或 点“分享”）</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">
+            <button id="shareBtn" style="appearance:none; border:1px solid rgba(0,0,0,.15); background:#fff; border-radius:10px; padding:10px 12px; font-size:14px">分享/保存</button>
+            <a id="openBtn" href="${url}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(0,0,0,.15); background:#fff; border-radius:10px; padding:10px 12px; font-size:14px; text-decoration:none; color:#111827">在新页打开</a>
+          </div>
+          <img id="img" src="${url}" alt="${exportName}" style="width:100%; height:auto; display:block; background:#fff" />
+        </div>
+      `;
+      const shareBtn = preparedWindow.document.getElementById("shareBtn");
+      if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+          try {
+            if (!preparedWindow.navigator?.share) {
+              preparedWindow.alert("当前浏览器不支持“分享”。请长按图片保存。");
+              return;
+            }
+            const res = await preparedWindow.fetch(url);
+            const blob = await res.blob();
+            const file = new File([blob], `${exportName}.png`, { type: "image/png" });
+            await preparedWindow.navigator.share({ files: [file], title: exportName });
+          } catch (e) {
+            preparedWindow.alert(`分享失败：${e?.message || e}`);
+          }
+        });
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function finishDownloadPng(exportName, blobOrUrl, preparedWindow) {
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const isMobile = document.body.classList.contains("mobile");
@@ -299,12 +337,10 @@ function init() {
 
     // 移动端/IOS：优先使用“预先打开的窗口”承接 Blob URL，避免弹窗/下载被浏览器拦截。
     if (preparedWindow) {
-      try {
-        preparedWindow.location.href = url;
-        if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      const ok = renderExportWindow(preparedWindow, exportName, url);
+      if (ok) {
+        if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 60_000);
         return;
-      } catch {
-        // fallback to default flow
       }
     }
 
@@ -325,6 +361,7 @@ function init() {
 
   async function renderQuoteToPng({ width, exportName, preparedWindow }) {
     const isMobile = document.body.classList.contains("mobile");
+    const isNarrow = width < 560;
 
     const pad = 16;
     const fontSmall = "12px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
@@ -335,7 +372,7 @@ function init() {
     const headerH = 118;
     const tableHeadH = 30;
     const contentW = width - pad * 2;
-    const nameW = contentW - 52 - imgSize - 12 - 210;
+    const nameW = Math.max(140, contentW - 52 - imgSize - 12 - 210);
 
     const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
     const rowImgUrls = lines.map((l) => {
@@ -360,6 +397,11 @@ function init() {
     const tctx = tmp.getContext("2d");
     tctx.font = fontSmall;
     const rowHeights = lines.map((l) => {
+      if (isNarrow) {
+        const nameLines = wrapTextCJK(tctx, l.name || "", contentW - imgSize - 24);
+        const infoLines = 2;
+        return Math.max(imgSize + 22, nameLines.length * 16 + infoLines * 16 + 22);
+      }
       const nameLines = wrapTextCJK(tctx, l.name || "", nameW);
       return Math.max(imgSize + 18, nameLines.length * 16 + 16);
     });
@@ -368,11 +410,11 @@ function init() {
     const notesLines = notes.split("\n").flatMap((ln) => wrapTextCJK(tctx, ln, contentW));
     const notesH = Math.max(60, notesLines.length * 14 + 18);
 
-    const tableH = tableHeadH + rowHeights.reduce((a, b) => a + b, 0) + 10;
+    const tableH = (isNarrow ? 14 : tableHeadH) + rowHeights.reduce((a, b) => a + b, 0) + 10;
     const totalsH = 60;
     const fullH = headerH + tableH + totalsH + 18 + notesH + 20;
 
-    const scale = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 2);
+    const scale = Math.min(2, window.devicePixelRatio || 2);
     const drawAll = async (ctx) => {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, fullH);
@@ -411,7 +453,7 @@ function init() {
         my += 18;
       }
 
-      // Table head
+      // Table head / Narrow head
       let y = headerH;
       ctx.strokeStyle = border;
       ctx.beginPath();
@@ -420,13 +462,18 @@ function init() {
       ctx.stroke();
       y += 8;
       ctx.fillStyle = muted;
-      ctx.fillText("序号", pad, y + 12);
-      ctx.fillText("图片", pad + 52, y + 12);
-      ctx.fillText("内容", pad + 52 + imgSize + 10, y + 12);
-      ctx.fillText("数量", width - pad - 190, y + 12);
-      ctx.fillText("单价", width - pad - 130, y + 12);
-      ctx.fillText("总价", width - pad - 70, y + 12);
-      y += 22;
+      if (!isNarrow) {
+        ctx.fillText("序号", pad, y + 12);
+        ctx.fillText("图片", pad + 52, y + 12);
+        ctx.fillText("内容", pad + 52 + imgSize + 10, y + 12);
+        ctx.fillText("数量", width - pad - 190, y + 12);
+        ctx.fillText("单价", width - pad - 130, y + 12);
+        ctx.fillText("总价", width - pad - 70, y + 12);
+        y += 22;
+      } else {
+        ctx.fillText("明细", pad, y + 12);
+        y += 18;
+      }
 
       for (let i = 0; i < lines.length; i += 1) {
         const l = lines[i];
@@ -438,29 +485,50 @@ function init() {
         ctx.stroke();
 
         const cy = y + 10;
-        ctx.fillStyle = brand;
-        ctx.fillText(String(l.seq), pad, cy + 12);
-
-        ctx.strokeRect(pad + 46, cy, imgSize, imgSize);
-        const bm = bitmaps[i];
-        if (bm) ctx.drawImage(bm, pad + 46, cy, imgSize, imgSize);
-
-        const nx = pad + 46 + imgSize + 10;
-        const nameLines = wrapTextCJK(ctx, l.name || "", nameW);
-        let ty = cy + 12;
-        for (const ln of nameLines.slice(0, 6)) {
-          ctx.fillText(ln, nx, ty);
-          ty += 16;
-        }
-
         const qty = toNumber(l.qty);
         const unit = toNumber(l.unitPrice);
         const total = qty * unit;
-        ctx.textAlign = "right";
-        ctx.fillText(String(qty), width - pad - 168, cy + 12);
-        ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
-        ctx.fillText(formatMoney(total), width - pad, cy + 12);
-        ctx.textAlign = "left";
+
+        ctx.fillStyle = brand;
+        if (!isNarrow) {
+          ctx.fillText(String(l.seq), pad, cy + 12);
+          ctx.strokeRect(pad + 46, cy, imgSize, imgSize);
+          const bm = bitmaps[i];
+          if (bm) ctx.drawImage(bm, pad + 46, cy, imgSize, imgSize);
+
+          const nx = pad + 46 + imgSize + 10;
+          const nameLines = wrapTextCJK(ctx, l.name || "", nameW);
+          let ty = cy + 12;
+          for (const ln of nameLines.slice(0, 6)) {
+            ctx.fillText(ln, nx, ty);
+            ty += 16;
+          }
+
+          ctx.textAlign = "right";
+          ctx.fillText(String(qty), width - pad - 168, cy + 12);
+          ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
+          ctx.fillText(formatMoney(total), width - pad, cy + 12);
+          ctx.textAlign = "left";
+        } else {
+          // Narrow card-like row: image + name, then qty/unit/total below.
+          ctx.strokeRect(pad, cy, imgSize, imgSize);
+          const bm = bitmaps[i];
+          if (bm) ctx.drawImage(bm, pad, cy, imgSize, imgSize);
+
+          const nx = pad + imgSize + 10;
+          ctx.fillStyle = muted;
+          ctx.fillText(`#${l.seq}`, nx, cy + 12);
+          ctx.fillStyle = brand;
+          const nameLines = wrapTextCJK(ctx, l.name || "", contentW - imgSize - 24);
+          let ty = cy + 30;
+          for (const ln of nameLines.slice(0, 6)) {
+            ctx.fillText(ln, nx, ty);
+            ty += 16;
+          }
+
+          ctx.fillStyle = muted;
+          ctx.fillText(`数量：${qty}   单价：${formatMoney(unit)}   总价：${formatMoney(total)}`, nx, ty + 2);
+        }
 
         y += h;
       }
