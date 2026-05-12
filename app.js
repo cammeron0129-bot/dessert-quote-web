@@ -369,7 +369,6 @@ function init() {
     const muted = "rgba(17,24,39,0.72)";
     const border = "rgba(0,0,0,0.12)";
     const imgSize = 48;
-    const headerH = 118;
     const tableHeadH = 30;
     const contentW = width - pad * 2;
     const nameW = Math.max(140, contentW - 52 - imgSize - 12 - 210);
@@ -410,6 +409,18 @@ function init() {
     const notesLines = notes.split("\n").flatMap((ln) => wrapTextCJK(tctx, ln, contentW));
     const notesH = Math.max(60, notesLines.length * 14 + 18);
 
+    const metaItems = [
+      ["时间：", state.meta.date || ""],
+      ["地点：", state.meta.location || ""],
+      ["客户：", state.meta.customer || ""],
+      ["联系人：", state.meta.contact || ""],
+      ["备注：", state.meta.note || ""],
+    ];
+    const metaTopY = 74;
+    const metaLineH = 18;
+    // 头部高度自适应，避免“联系人/备注”被表头覆盖
+    const headerH = Math.max(118, metaTopY + metaItems.length * metaLineH + 16);
+
     const tableH = (isNarrow ? 14 : tableHeadH) + rowHeights.reduce((a, b) => a + b, 0) + 10;
     const totalsH = 60;
     const fullH = headerH + tableH + totalsH + 18 + notesH + 20;
@@ -437,20 +448,13 @@ function init() {
       ctx.setLineDash([]);
 
       ctx.font = fontSmall;
-      const meta = [
-        ["时间：", state.meta.date || ""],
-        ["地点：", state.meta.location || ""],
-        ["客户：", state.meta.customer || ""],
-        ["联系人：", state.meta.contact || ""],
-        ["备注：", state.meta.note || ""],
-      ];
-      let my = 74;
-      for (const [k, v] of meta) {
+      let my = metaTopY;
+      for (const [k, v] of metaItems) {
         ctx.fillStyle = muted;
         ctx.fillText(k, pad, my);
         ctx.fillStyle = brand;
         ctx.fillText(v, pad + 44, my);
-        my += 18;
+        my += metaLineH;
       }
 
       // Table head / Narrow head
