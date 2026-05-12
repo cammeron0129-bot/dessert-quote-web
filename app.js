@@ -229,6 +229,232 @@ function init() {
     if (typeof blobOrUrl !== "string") setTimeout(() => URL.revokeObjectURL(url), 30_000);
   }
 
+  function wrapTextCJK(ctx, text, maxWidth) {
+    const s = String(text || "");
+    if (!s) return [""];
+    const lines = [];
+    let line = "";
+    for (const ch of s) {
+      const test = line + ch;
+      if (ctx.measureText(test).width <= maxWidth || !line) line = test;
+      else {
+        lines.push(line);
+        line = ch;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  async function loadImageBitmap(url) {
+    const abs = new URL(url, location.href).toString();
+    const res = await fetch(abs, { cache: "force-cache" });
+    const blob = await res.blob();
+    if ("createImageBitmap" in window) return await createImageBitmap(blob);
+    return await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(blob);
+    });
+  }
+
+  async function renderQuoteToPng({ width, exportName }) {
+    const isMobile = document.body.classList.contains("mobile");
+
+    const pad = 16;
+    const fontSmall = "12px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+    const brand = "#111827";
+    const muted = "rgba(17,24,39,0.72)";
+    const border = "rgba(0,0,0,0.12)";
+    const imgSize = 48;
+    const headerH = 118;
+    const tableHeadH = 30;
+    const contentW = width - pad * 2;
+    const nameW = contentW - 52 - imgSize - 12 - 210;
+
+    const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+    const rowImgUrls = lines.map((l) => {
+      if (!l.source?.startsWith("menu:")) return null;
+      const name = l.source.slice("menu:".length);
+      const item = menu.find((m) => m.name === name);
+      return item?.imageThumb || item?.image || null;
+    });
+
+    const bitmaps = await Promise.all(
+      rowImgUrls.map(async (u) => {
+        if (!u) return null;
+        try {
+          return await loadImageBitmap(u);
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    const tmp = document.createElement("canvas");
+    const tctx = tmp.getContext("2d");
+    tctx.font = fontSmall;
+    const rowHeights = lines.map((l) => {
+      const nameLines = wrapTextCJK(tctx, l.name || "", nameW);
+      return Math.max(imgSize + 18, nameLines.length * 16 + 16);
+    });
+
+    const notes = state.meta.orderNotes || "";
+    const notesLines = notes.split("\n").flatMap((ln) => wrapTextCJK(tctx, ln, contentW));
+    const notesH = Math.max(60, notesLines.length * 14 + 18);
+
+    const tableH = tableHeadH + rowHeights.reduce((a, b) => a + b, 0) + 10;
+    const totalsH = 60;
+    const fullH = headerH + tableH + totalsH + 18 + notesH + 20;
+
+    const canvas = document.createElement("canvas");
+    const scale = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 2);
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(fullH * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, fullH);
+
+    // Header
+    ctx.font = "18px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+    ctx.fillStyle = brand;
+    ctx.fillText("【当夏烘焙】甜品台服务 报价单", pad + 72, 30);
+    try {
+      const logo = await loadImageBitmap("./assets/brand/logo.png");
+      ctx.drawImage(logo, pad, 6, 64, 48);
+    } catch {}
+
+    ctx.strokeStyle = border;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(pad, 52);
+    ctx.lineTo(width - pad, 52);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.font = fontSmall;
+    const meta = [
+      ["时间：", state.meta.date || ""],
+      ["地点：", state.meta.location || ""],
+      ["客户：", state.meta.customer || ""],
+      ["联系人：", state.meta.contact || ""],
+      ["备注：", state.meta.note || ""],
+    ];
+    let my = 74;
+    for (const [k, v] of meta) {
+      ctx.fillStyle = muted;
+      ctx.fillText(k, pad, my);
+      ctx.fillStyle = brand;
+      ctx.fillText(v, pad + 44, my);
+      my += 18;
+    }
+
+    // Table head
+    let y = headerH;
+    ctx.strokeStyle = border;
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(width - pad, y);
+    ctx.stroke();
+    y += 8;
+    ctx.fillStyle = muted;
+    ctx.fillText("序号", pad, y + 12);
+    ctx.fillText("图片", pad + 52, y + 12);
+    ctx.fillText("内容", pad + 52 + imgSize + 10, y + 12);
+    ctx.fillText("数量", width - pad - 190, y + 12);
+    ctx.fillText("单价", width - pad - 130, y + 12);
+    ctx.fillText("总价", width - pad - 70, y + 12);
+    y += 22;
+
+    for (let i = 0; i < lines.length; i += 1) {
+      const l = lines[i];
+      const h = rowHeights[i];
+      ctx.strokeStyle = border;
+      ctx.beginPath();
+      ctx.moveTo(pad, y);
+      ctx.lineTo(width - pad, y);
+      ctx.stroke();
+
+      const cy = y + 10;
+      ctx.fillStyle = brand;
+      ctx.fillText(String(l.seq), pad, cy + 12);
+
+      ctx.strokeRect(pad + 46, cy, imgSize, imgSize);
+      const bm = bitmaps[i];
+      if (bm) ctx.drawImage(bm, pad + 46, cy, imgSize, imgSize);
+
+      const nx = pad + 46 + imgSize + 10;
+      const nameLines = wrapTextCJK(ctx, l.name || "", nameW);
+      let ty = cy + 12;
+      for (const ln of nameLines.slice(0, 6)) {
+        ctx.fillText(ln, nx, ty);
+        ty += 16;
+      }
+
+      const qty = toNumber(l.qty);
+      const unit = toNumber(l.unitPrice);
+      const total = qty * unit;
+      ctx.textAlign = "right";
+      ctx.fillText(String(qty), width - pad - 168, cy + 12);
+      ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
+      ctx.fillText(formatMoney(total), width - pad, cy + 12);
+      ctx.textAlign = "left";
+
+      y += h;
+    }
+    ctx.strokeStyle = border;
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(width - pad, y);
+    ctx.stroke();
+
+    const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+    const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
+    const computedAfterDiscount = subtotal * (discountPercent / 100);
+    const manualFinal = toNumber(state.meta.finalPrice);
+    const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
+
+    y += 22;
+    ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+    ctx.fillStyle = muted;
+    ctx.textAlign = "right";
+    ctx.fillText("小计：", width - pad - 120, y);
+    ctx.fillStyle = brand;
+    ctx.fillText(formatMoney(subtotal), width - pad, y);
+    y += 20;
+    ctx.fillStyle = muted;
+    ctx.fillText("折扣后：", width - pad - 120, y);
+    ctx.fillStyle = brand;
+    ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
+    ctx.textAlign = "left";
+
+    y += 18;
+    ctx.strokeStyle = border;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(pad, y);
+    ctx.lineTo(width - pad, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    y += 18;
+    ctx.font = fontSmall;
+    ctx.fillStyle = brand;
+    ctx.fillText(state.meta.orderNotesTitle || "订购说明", pad, y);
+    y += 18;
+    ctx.fillStyle = muted;
+    for (const ln of notesLines) {
+      ctx.fillText(ln, pad, y);
+      y += 14;
+      if (y > fullH - 10) break;
+    }
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    finishDownloadPng(exportName, blob);
+  }
+
   async function exportScreenshotPng() {
     const exportName = `${buildExportName()}_截图`;
     const node = document.querySelector("#quotePaper");
@@ -239,24 +465,9 @@ function init() {
     btnScreenshot.textContent = "截图中...";
 
     try {
-      const html2canvas = await ensureHtml2Canvas();
       const rect = node.getBoundingClientRect();
       const width = Math.floor(rect.width);
-      const height = Math.floor(rect.height);
-      const scale = document.body.classList.contains("mobile") ? 1 : Math.min(2, window.devicePixelRatio || 2);
-
-      const canvas = await html2canvas(node, {
-        backgroundColor: "#ffffff",
-        scale,
-        width,
-        height,
-        logging: false,
-      });
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        finishDownloadPng(exportName, blob);
-      }, "image/png");
+      await renderQuoteToPng({ width, exportName });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
@@ -443,59 +654,8 @@ function init() {
     btnExportImage.textContent = "生成中...";
 
     try {
-      const html2canvas = await ensureHtml2Canvas();
-
-      // Build a lightweight export node (avoid heavy inputs/layout that can hang on mobile)
       const width = computeExportWidth();
-      const clone = buildExportNode(width);
-      const wrap = document.createElement("div");
-      wrap.style.position = "fixed";
-      wrap.style.left = "-10000px";
-      wrap.style.top = "0";
-      wrap.style.width = "0";
-      wrap.style.height = "0";
-      wrap.style.overflow = "hidden";
-      wrap.appendChild(clone);
-      document.body.appendChild(wrap);
-
-      // Force images to load (thumbs are same-origin on GitHub Pages)
-      const imgs = Array.from(clone.querySelectorAll("img"));
-      await Promise.all(
-        imgs.map(
-          (img) =>
-            new Promise((resolve) => {
-              if (img.complete) return resolve();
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            })
-        )
-      );
-
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready.catch(() => {});
-      }
-
-      const isMobile = document.body.classList.contains("mobile");
-      const scale = isMobile ? 1 : Math.min(2, window.devicePixelRatio || 2);
-
-      const timeoutMs = isMobile ? 25_000 : 35_000;
-      const canvas = await Promise.race([
-        html2canvas(clone, {
-          backgroundColor: "#ffffff",
-          scale,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-        }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("生成超时（可尝试减少报价行或在电脑端导出）")), timeoutMs)),
-      ]);
-
-      wrap.remove();
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        finishDownloadPng(exportName, blob);
-      }, "image/png");
+      await renderQuoteToPng({ width, exportName });
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
