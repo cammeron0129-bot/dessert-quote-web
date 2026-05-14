@@ -1516,72 +1516,69 @@ function init() {
       const sx = rectStage.width / rectContent.width;
       const s = Math.min(1, sx);
 
-      // 计算分页断点（避免切割表格行/块）
-      const contentTop = rectContent.top;
-      const candidates = new Set([0]);
-      const rowEls = Array.from(imported.querySelectorAll("tbody tr"));
-      for (const tr of rowEls) {
-        const rtr = tr.getBoundingClientRect();
-        candidates.add(Math.max(0, rtr.top - contentTop));
-      }
-      const blockEls = [
-        imported.querySelector(".totals"),
-        imported.querySelector(".paper__foot"),
-      ].filter(Boolean);
-      for (const elx of blockEls) {
-        const rEl = elx.getBoundingClientRect();
-        candidates.add(Math.max(0, rEl.top - contentTop));
-      }
-      // 订购说明内每一行也作为分页断点，避免切割段落
-      const noteLineEls = Array.from(imported.querySelectorAll(".orderNotes *"))
-        .filter((n) => n && n.getBoundingClientRect);
-      for (const elx of noteLineEls) {
-        const rEl = elx.getBoundingClientRect();
-        candidates.add(Math.max(0, rEl.top - contentTop));
-      }
-      const sorted = Array.from(candidates)
-        .map((n) => Math.floor(n))
-        .filter((n) => Number.isFinite(n))
-        .sort((a, b) => a - b);
-
       const contentHeight = Math.ceil(rectContent.height);
       const stageHeight = rectStage.height;
       // 留一点安全空间，避免因为四舍五入/字体渲染导致底部切到一行
       const SAFE_PAD = 16;
       const pageHeightUnscaled = Math.max(1, (stageHeight - SAFE_PAD) / s);
 
-      const starts = [];
+      // 构建“不可切割块”列表：每一行、合计块、订购说明块与行
+      const blocks = [];
+      const pushBlock = (el) => {
+        if (!el || !el.getBoundingClientRect) return;
+        const rEl = el.getBoundingClientRect();
+        const top = Math.max(0, rEl.top - contentTop);
+        const bottom = Math.max(0, rEl.bottom - contentTop);
+        if (Number.isFinite(top) && Number.isFinite(bottom) && bottom > top + 1) blocks.push({ top, bottom });
+      };
+
+      for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr);
+      pushBlock(imported.querySelector(".totals"));
+      pushBlock(imported.querySelector(".paper__foot"));
+      for (const div of Array.from(imported.querySelectorAll(".orderNotes > div"))) pushBlock(div);
+
+      blocks.sort((a, b) => a.top - b.top);
+
+      const segments = [];
       let start = 0;
       const EPS = 6;
       while (start < contentHeight - EPS) {
-        starts.push(start);
         const max = start + pageHeightUnscaled;
-        // 找到不超过 max 的最后一个断点（且必须推进）
-        let next = max;
-        for (let i = 0; i < sorted.length; i += 1) {
-          const bp = sorted[i];
-          if (bp <= start + EPS) continue;
-          if (bp < max - 24) next = bp;
-          else break;
+        // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
+        const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
+
+        if (overflow) {
+          // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
+          const nextStart = Math.max(overflow.top, start + EPS);
+          const heightUnscaled = Math.max(1, nextStart - start);
+          segments.push({ start, heightUnscaled });
+          start = nextStart;
+          continue;
         }
-        if (next <= start + EPS) next = max;
-        start = next;
+
+        // 没有切割：正常推进一页
+        const heightUnscaled = Math.min(pageHeightUnscaled, contentHeight - start);
+        segments.push({ start, heightUnscaled });
+        start = start + pageHeightUnscaled;
       }
-      const totalPages = Math.max(1, starts.length);
+      const totalPages = Math.max(1, segments.length);
 
       // Clear and rebuild pages with clipped offsets
       pagesEl.innerHTML = "";
       for (let i = 0; i < totalPages; i += 1) {
+        const seg = segments[i] || { start: 0, heightUnscaled: pageHeightUnscaled };
         const page = doc.createElement("div");
         page.className = "page";
         const st = doc.createElement("div");
         st.className = "stage";
+        // 本页裁剪高度（避免显示半行），其余留白
+        st.style.height = `${Math.floor(seg.heightUnscaled * s)}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
         sc.style.transform = `scale(${s})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
-        clone.style.top = `-${Math.floor(starts[i] || 0)}px`;
+        clone.style.top = `-${Math.floor(seg.start || 0)}px`;
         sc.appendChild(clone);
         st.appendChild(sc);
         page.appendChild(st);
