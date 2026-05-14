@@ -172,18 +172,186 @@ function init() {
     URL.revokeObjectURL(url);
   }
 
-  function exportCsv() {
-    const header = ["序号", "内容", "数量", "单价", "总价"];
-    const rows = state.quoteLines.map((l, idx) => {
-      const qty = toNumber(l.qty);
-      const unit = toNumber(l.unitPrice);
-      const total = qty * unit;
-      return [String(idx + 1), String(l.name || ""), String(qty), String(unit), String(total)];
-    });
-    const csv = [header, ...rows]
-      .map((r) => r.map((cell) => `"${String(cell).replace(/\"/g, '""')}"`).join(","))
-      .join("\n");
-    downloadText(`${buildExportName()}.csv`, "text/csv;charset=utf-8", csv);
+  async function exportTable() {
+    const exportName = buildExportName();
+    const oldText = btnExportCsv.textContent;
+    btnExportCsv.disabled = true;
+    btnExportCsv.textContent = "生成中...";
+
+    try {
+      const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+
+      const subtotal = lines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+      const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
+      const computedAfterDiscount = subtotal * (discountPercent / 100);
+      const manualFinal = toNumber(state.meta.finalPrice);
+      const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
+
+      async function loadDataUrlsWithLimit(urls, limit) {
+        const results = new Array(urls.length).fill("");
+        const cache = new Map();
+        let nextIndex = 0;
+        const n = Math.max(1, Math.min(limit, urls.length));
+
+        async function worker() {
+          while (nextIndex < urls.length) {
+            const i = nextIndex++;
+            const u = urls[i];
+            if (!u) continue;
+            const abs = new URL(u, location.href).toString();
+            if (cache.has(abs)) {
+              results[i] = cache.get(abs);
+              continue;
+            }
+            let data = "";
+            try {
+              data = await toDataUrlFromUrl(u);
+            } catch {
+              // retry once
+              try {
+                await new Promise((r) => setTimeout(r, 160));
+                data = await toDataUrlFromUrl(u);
+              } catch {
+                data = "";
+              }
+            }
+            cache.set(abs, data);
+            results[i] = data;
+          }
+        }
+
+        await Promise.all(Array.from({ length: n }, () => worker()));
+        return results;
+      }
+
+      const imgUrls = lines.map((l) => {
+        if (!l.source?.startsWith("menu:")) return "";
+        const name = l.source.slice("menu:".length);
+        return menuThumbForName(name) || menuImageForLine(l) || "";
+      });
+      const imgDataUrls = await loadDataUrlsWithLimit(imgUrls, 8);
+
+      let logoDataUrl = "";
+      try {
+        logoDataUrl = await toDataUrlFromUrl("./assets/brand/logo.png");
+      } catch {}
+
+      const esc = (s) =>
+        String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;");
+
+      const metaRows = [
+        ["时间", state.meta.date || ""],
+        ["地点", state.meta.location || ""],
+        ["客户", state.meta.customer || ""],
+        ["联系人", state.meta.contact || ""],
+        ["备注", state.meta.note || ""],
+      ];
+
+      const rowsHtml = lines
+        .map((l, idx) => {
+          const qty = toNumber(l.qty);
+          const unit = toNumber(l.unitPrice);
+          const total = qty * unit;
+          const img = imgDataUrls[idx]
+            ? `<img src="${imgDataUrls[idx]}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd" />`
+            : "";
+          return `
+            <tr>
+              <td class="num">${l.seq}</td>
+              <td class="img">${img}</td>
+              <td>${esc(l.name || "")}</td>
+              <td class="num">${esc(qty)}</td>
+              <td class="num">${esc(formatMoney(unit))}</td>
+              <td class="num">${esc(formatMoney(total))}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      const html = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${esc(exportName)}</title>
+    <style>
+      body{font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif; padding:16px; color:#111827;}
+      .title{font-size:18px; font-weight:700; margin:0 0 10px; display:flex; gap:10px; align-items:center;}
+      .logo{width:56px; height:auto;}
+      table{border-collapse:collapse; width:100%;}
+      td,th{border:1px solid #e5e7eb; padding:8px; vertical-align:top;}
+      th{background:#f8fafc; text-align:left;}
+      .meta{margin:0 0 12px;}
+      .meta td{border:0; padding:2px 0;}
+      .meta .k{color:#6b7280; width:80px;}
+      .num{text-align:right; white-space:nowrap;}
+      .img{width:64px;}
+      .totals{margin-top:10px; width:100%;}
+      .totals td{border:0; padding:4px 0;}
+      .totals .k{color:#6b7280;}
+      .notesTitle{margin-top:14px; font-weight:700;}
+      .notes{white-space:pre-wrap; color:#374151; margin-top:6px;}
+    </style>
+  </head>
+  <body>
+    <div class="title">
+      ${logoDataUrl ? `<img class="logo" src="${logoDataUrl}" alt="当夏烘焙" />` : ""}
+      <div>【当夏烘焙】甜品台服务 报价单</div>
+    </div>
+
+    <table class="meta">
+      <tbody>
+        ${metaRows
+          .map(
+            ([k, v]) =>
+              `<tr><td class="k">${esc(k)}：</td><td>${esc(v)}</td></tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:52px">序号</th>
+          <th style="width:74px">图片</th>
+          <th>内容</th>
+          <th style="width:70px">数量</th>
+          <th style="width:90px">单价</th>
+          <th style="width:90px">总价</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <table class="totals">
+      <tbody>
+        <tr><td class="k">小计：</td><td class="num">${esc(formatMoney(subtotal))}</td></tr>
+        <tr><td class="k">折扣后：</td><td class="num">${esc(formatMoney(totalAfterDiscount))}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="notesTitle">${esc(state.meta.orderNotesTitle || "订购说明")}</div>
+    <div class="notes">${esc(state.meta.orderNotes || "")}</div>
+  </body>
+</html>`;
+
+      // 用 .xls 扩展名让 Excel/WPS 直接以表格打开（本质是 HTML）
+      downloadText(`${exportName}.xls`, "application/vnd.ms-excel;charset=utf-8", html);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      alert(`导出表格失败：${e?.message || e}`);
+    } finally {
+      btnExportCsv.disabled = false;
+      btnExportCsv.textContent = oldText;
+    }
   }
 
   async function toDataUrlFromUrl(url) {
@@ -1504,7 +1672,7 @@ function init() {
     saveState(state);
   });
 
-  btnExportCsv.addEventListener("click", exportCsv);
+  btnExportCsv.addEventListener("click", exportTable);
   btnScreenshot.addEventListener("click", exportScreenshotPng);
 
   btnExportImage.addEventListener("click", exportLongPng);
