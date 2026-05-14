@@ -513,12 +513,12 @@ function init() {
       // Table header
       const headerRow = ws.getRow(r);
       headerRow.values = ["序号", "图片", "内容", "数量", "单价", "总价"];
-      headerRow.font = { bold: true, color: { argb: "FF111827" } };
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
       headerRow.alignment = { vertical: "middle", horizontal: "left" };
       headerRow.height = 20;
       headerRow.eachCell((cell) => {
-        // 表格底色全白
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
+        // 表头底色品牌绿
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_GREEN } };
         cell.border = { bottom: { style: "thin", color: { argb: "FFCBD5E1" } } };
       });
       r += 1;
