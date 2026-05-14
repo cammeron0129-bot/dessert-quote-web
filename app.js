@@ -1054,11 +1054,11 @@ function init() {
             ty += 16;
           }
 
-          ctx.textAlign = "right";
-          ctx.fillText(String(qty), width - pad - 168, cy + 12);
-          ctx.fillText(formatMoney(unit), width - pad - 100, cy + 12);
-          ctx.fillText(formatMoney(total), width - pad, cy + 12);
+          // 数字列改为左对齐
           ctx.textAlign = "left";
+          ctx.fillText(String(qty), width - pad - 190, cy + 12);
+          ctx.fillText(formatMoney(unit), width - pad - 130, cy + 12);
+          ctx.fillText(formatMoney(total), width - pad - 70, cy + 12);
         } else {
           // Narrow card-like row: image + name, then qty/unit/total below.
           ctx.strokeRect(pad, cy, imgSize, imgSize);
@@ -1103,20 +1103,20 @@ function init() {
     y += 22;
     ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
     ctx.fillStyle = muted;
-    ctx.textAlign = "right";
-    ctx.fillText("合计：", width - pad - 120, y);
+    ctx.textAlign = "left";
+    ctx.fillText("合计：", width - pad - 190, y);
     ctx.fillStyle = brand;
-    ctx.fillText(formatMoney(subtotal), width - pad, y);
+    ctx.fillText(formatMoney(subtotal), width - pad - 130, y);
     y += 20;
     ctx.fillStyle = muted;
-    ctx.fillText("含税价：", width - pad - 120, y);
+    ctx.fillText("含税价：", width - pad - 190, y);
     ctx.fillStyle = brand;
-    ctx.fillText(formatMoney(taxIncluded), width - pad, y);
+    ctx.fillText(formatMoney(taxIncluded), width - pad - 130, y);
     y += 20;
     ctx.fillStyle = muted;
-    ctx.fillText("优惠价：", width - pad - 120, y);
+    ctx.fillText("优惠价：", width - pad - 190, y);
     ctx.fillStyle = "#dc2626";
-    ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
+    ctx.fillText(formatMoney(totalAfterDiscount), width - pad - 130, y);
     ctx.textAlign = "left";
 
       y += 18;

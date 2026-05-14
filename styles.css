@@ -319,10 +319,10 @@ body {
 .table thead th { border-bottom: 1px solid rgba(0,0,0,0.18); font-size: 12px; text-align: left; }
 .col--seq { width: 54px; }
 .col--img { width: 72px; }
-.col--qty { width: 90px; text-align: right; }
-.col--price { width: 110px; text-align: right; }
+.col--qty { width: 90px; text-align: left; }
+.col--price { width: 110px; text-align: left; }
 .col--act { width: 42px; }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
+.num { text-align: left; font-variant-numeric: tabular-nums; }
 .quoteThumb {
   width: 56px;
   height: 56px;
