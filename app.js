@@ -388,16 +388,26 @@ function init() {
 </html>`;
       const html = `\ufeff${excelHtml}`;
 
-      // 手机端：优先通过“系统分享”导出 .xls（Excel/WPS 更容易识别），避免 WPS 打开 .html 空白。
+      // 手机端（iOS + WPS）：WPS/Excel 往往不显示 HTML-xls 里的图片（data: / VML 都不稳定）。
+      // 所以手机端策略：
+      // - 导出“可编辑表格”：.xls（保证能编辑，但图片可能被 WPS 忽略）
+      // - 同时提供“含图片预览”：.html（浏览器打开一定有图；如需发给客户可用这个）
       if (isMobile) {
         const xlsFile = new File([html], `${exportName}.xls`, {
           type: "application/vnd.ms-excel;charset=utf-8",
+        });
+        const previewFile = new File([excelHtml], `${exportName}_含图预览.html`, {
+          type: "text/html;charset=utf-8",
         });
 
         // 1) 优先直接调用系统分享（不依赖弹窗），保存到“文件”里后用 WPS/Excel 打开
         try {
           if (navigator?.share) {
-            await navigator.share({ files: [xlsFile], title: exportName });
+            await navigator.share({
+              files: [xlsFile, previewFile],
+              title: exportName,
+              text: "说明：.xls 可编辑但 iOS WPS 可能不显示图片；_含图预览.html 用浏览器打开一定带图片。",
+            });
             return;
           }
         } catch {
@@ -406,9 +416,9 @@ function init() {
 
         // 2) 无法分享时：同页打开预览（不弹窗），用户可用浏览器“分享”菜单保存
         try {
-          const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+          const blob = new Blob([excelHtml], { type: "text/html;charset=utf-8" });
           const url = URL.createObjectURL(blob);
-          alert("将打开表格预览页。请用浏览器“分享/下载”保存文件（建议保存为 .xls），再用 WPS/Excel 打开。返回本页面请点浏览器“返回”。");
+          alert("将打开“含图预览”页（一定带图片）。如需可编辑表格，请用上方“系统分享”导出 .xls。返回本页面请点浏览器“返回”。");
           window.location.assign(url);
           setTimeout(() => {
             try {
