@@ -209,6 +209,20 @@ function init() {
       const manualFinal = toNumber(state.meta.finalPrice);
       const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
+      function dataUrlToBase64(dataUrl) {
+        const s = String(dataUrl || "");
+        const idx = s.indexOf("base64,");
+        if (idx < 0) return "";
+        return s.slice(idx + "base64,".length);
+      }
+
+      async function toArrayBufferFromUrl(url) {
+        const abs = new URL(url, location.href).toString();
+        const res = await fetch(abs, { cache: "force-cache" });
+        const buf = await res.arrayBuffer();
+        return buf;
+      }
+
       async function loadDataUrlsWithLimit(urls, limit) {
         const results = new Array(urls.length).fill("");
         const cache = new Map();
@@ -420,53 +434,200 @@ function init() {
 </html>`;
       const html = `\ufeff${excelHtml}`;
 
-      // 手机端（iOS + WPS）：WPS/Excel 往往不显示 HTML-xls 里的图片（data: / VML 都不稳定）。
-      // 所以手机端策略：
-      // - 导出“可编辑表格”：.xls（保证能编辑，但图片可能被 WPS 忽略）
-      // - 同时提供“含图片预览”：.html（浏览器打开一定有图；如需发给客户可用这个）
-      if (isMobile) {
-        const xlsFile = new File([html], `${exportName}.xls`, {
-          type: "application/vnd.ms-excel;charset=utf-8",
-        });
-        const previewFile = new File([excelHtml], `${exportName}_含图预览.html`, {
-          type: "text/html;charset=utf-8",
-        });
-
-        // 1) 优先直接调用系统分享（不依赖弹窗），保存到“文件”里后用 WPS/Excel 打开
-        try {
-          if (navigator?.share) {
-            await navigator.share({
-              files: [xlsFile, previewFile],
-              title: exportName,
-              text: "说明：.xls 可编辑但 iOS WPS 可能不显示图片；_含图预览.html 用浏览器打开一定带图片。",
-            });
-            return;
-          }
-        } catch {
-          // ignore, fallback below
-        }
-
-        // 2) 无法分享时：同页打开预览（不弹窗），用户可用浏览器“分享”菜单保存
-        try {
-          const blob = new Blob([excelHtml], { type: "text/html;charset=utf-8" });
-          const url = URL.createObjectURL(blob);
-          alert("将打开“含图预览”页（一定带图片）。如需可编辑表格，请用上方“系统分享”导出 .xls。返回本页面请点浏览器“返回”。");
-          window.location.assign(url);
-          setTimeout(() => {
-            try {
-              URL.revokeObjectURL(url);
-            } catch {}
-          }, 120_000);
-          return;
-        } catch (e) {
-          alert(`导出表格失败：${e?.message || e}`);
-          return;
-        }
+      // 真正的 .xlsx（带图片嵌入单元格）— iOS/电脑都一致可用
+      const ExcelJS = window.ExcelJS;
+      if (!ExcelJS) {
+        alert("导出表格组件未加载（ExcelJS）。将改用兼容模式导出。");
+        downloadText(`${exportName}.xls`, "application/vnd.ms-excel;charset=utf-8", html);
         return;
       }
 
-      // 电脑端：用 .xls 扩展名让 Excel/WPS 直接以表格打开（本质是 HTML）
-      downloadText(`${exportName}.xls`, "application/vnd.ms-excel;charset=utf-8", html);
+      const wb = new ExcelJS.Workbook();
+      wb.creator = "Dangxia Quote Web";
+      wb.created = new Date();
+      const ws = wb.addWorksheet("报价单", {
+        properties: { defaultRowHeight: 18 },
+        pageSetup: { paperSize: 9, orientation: "portrait" },
+      });
+
+      // Columns
+      ws.columns = [
+        { header: "序号", key: "seq", width: 6 },
+        { header: "图片", key: "img", width: 12 },
+        { header: "内容", key: "name", width: 34 },
+        { header: "数量", key: "qty", width: 8 },
+        { header: "单价", key: "unit", width: 10 },
+        { header: "总价", key: "total", width: 12 },
+      ];
+
+      // Header row (logo + title)
+      ws.mergeCells("A1:F1");
+      const titleCell = ws.getCell("A1");
+      titleCell.value = "【当夏烘焙】甜品台服务 报价单";
+      titleCell.font = { name: "PingFang SC", size: 16, bold: true };
+      titleCell.alignment = { vertical: "middle", horizontal: "center" };
+      ws.getRow(1).height = 34;
+
+      // Add logo at A1 area
+      try {
+        const logoBuf = await toArrayBufferFromUrl("./assets/brand/logo.png");
+        const logoId = wb.addImage({ buffer: logoBuf, extension: "png" });
+        ws.addImage(logoId, { tl: { col: 0.1, row: 0.15 }, ext: { width: 64, height: 48 } });
+      } catch {
+        // ignore
+      }
+
+      // Meta
+      let r = 3;
+      const metaPairs = [
+        ["时间", state.meta.date || ""],
+        ["地点", state.meta.location || ""],
+        ["客户", state.meta.customer || ""],
+        ["联系人", state.meta.contact || ""],
+        ["备注", state.meta.note || ""],
+      ];
+      for (const [k, v] of metaPairs) {
+        ws.mergeCells(`A${r}:B${r}`);
+        ws.mergeCells(`C${r}:F${r}`);
+        ws.getCell(`A${r}`).value = `${k}：`;
+        ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
+        ws.getCell(`A${r}`).alignment = { vertical: "middle", horizontal: "right" };
+        ws.getCell(`C${r}`).value = String(v || "");
+        ws.getCell(`C${r}`).alignment = { vertical: "middle", horizontal: "left" };
+        r += 1;
+      }
+
+      r += 1;
+
+      // Table header
+      const headerRow = ws.getRow(r);
+      headerRow.values = ["序号", "图片", "内容", "数量", "单价", "总价"];
+      headerRow.font = { bold: true, color: { argb: "FF111827" } };
+      headerRow.alignment = { vertical: "middle", horizontal: "left" };
+      headerRow.height = 20;
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+        cell.border = { bottom: { style: "thin", color: { argb: "FFCBD5E1" } } };
+      });
+      r += 1;
+
+      // Load thumbs as buffers
+      const imgBuffers = await Promise.all(
+        imgUrls.map(async (u, idx) => {
+          if (!u) return null;
+          try {
+            if (inlineImages && imgDataUrls[idx]) {
+              const b64 = dataUrlToBase64(imgDataUrls[idx]);
+              return { base64: b64, extension: "png" };
+            }
+            const buf = await toArrayBufferFromUrl(u);
+            // guess png/jpg
+            const ext = String(u).toLowerCase().includes(".jpg") || String(u).toLowerCase().includes(".jpeg")
+              ? "jpeg"
+              : "png";
+            return { buffer: buf, extension: ext };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      // Rows with images anchored to cell B
+      for (let i = 0; i < tableLines.length; i += 1) {
+        const l = tableLines[i];
+        const qty = toNumber(l.qty);
+        const unit = toNumber(l.unitPrice);
+        const total = qty * unit;
+        const row = ws.getRow(r);
+        row.getCell(1).value = l.seq;
+        row.getCell(3).value = l.name || "";
+        row.getCell(4).value = qty;
+        row.getCell(5).value = unit;
+        row.getCell(6).value = total;
+        row.height = 44;
+        row.alignment = { vertical: "middle" };
+        // borders
+        for (let c = 1; c <= 6; c += 1) {
+          const cell = row.getCell(c);
+          cell.border = { bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
+          if (c === 4 || c === 5 || c === 6) cell.alignment = { vertical: "middle", horizontal: "right" };
+          if (c === 1) cell.alignment = { vertical: "middle", horizontal: "right" };
+        }
+        // image in column B (cell 2)
+        const imgSpec = imgBuffers[i];
+        if (imgSpec) {
+          const imgId = wb.addImage(imgSpec);
+          ws.addImage(imgId, {
+            tl: { col: 1 + 0.2, row: r - 1 + 0.15 },
+            ext: { width: 40, height: 40 },
+            editAs: "oneCell",
+          });
+        }
+        r += 1;
+      }
+
+      r += 1;
+      // Totals
+      ws.mergeCells(`A${r}:E${r}`);
+      ws.getCell(`A${r}`).value = "合计：";
+      ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
+      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).value = subtotal;
+      ws.getCell(`F${r}`).numFmt = "0.00";
+      ws.getCell(`F${r}`).font = { bold: true };
+      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      r += 1;
+
+      ws.mergeCells(`A${r}:E${r}`);
+      ws.getCell(`A${r}`).value = "含税价：";
+      ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
+      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).value = taxIncluded;
+      ws.getCell(`F${r}`).numFmt = "0.00";
+      ws.getCell(`F${r}`).font = { bold: true };
+      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      r += 1;
+
+      ws.mergeCells(`A${r}:E${r}`);
+      ws.getCell(`A${r}`).value = "优惠价：";
+      ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FFDC2626" } };
+      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).value = totalAfterDiscount;
+      ws.getCell(`F${r}`).numFmt = "0.00";
+      ws.getCell(`F${r}`).font = { bold: true, color: { argb: "FFDC2626" } };
+      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      r += 2;
+
+      // Notes
+      ws.mergeCells(`A${r}:F${r}`);
+      ws.getCell(`A${r}`).value = state.meta.orderNotesTitle || "订购说明";
+      ws.getCell(`A${r}`).font = { bold: true };
+      r += 1;
+      ws.mergeCells(`A${r}:F${r + 3}`);
+      ws.getCell(`A${r}`).value = state.meta.orderNotes || "";
+      ws.getCell(`A${r}`).alignment = { wrapText: true, vertical: "top" };
+      ws.getRow(r).height = 54;
+
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      if (isMobile && navigator?.share) {
+        const file = new File([blob], `${exportName}.xlsx`, { type: blob.type });
+        await navigator.share({ files: [file], title: exportName });
+        return;
+      }
+
+      // Desktop / fallback download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${exportName}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
