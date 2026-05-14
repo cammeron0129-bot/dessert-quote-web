@@ -512,6 +512,7 @@ function init() {
       r += 1;
 
       // Table header
+      const headerRowIndex = r;
       const headerRow = ws.getRow(r);
       headerRow.values = ["序号", "图片", "内容", "数量", "单价", "总价"];
       headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -633,6 +634,20 @@ function init() {
         ws.getCell(`A${r}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
         ws.getRow(r).height = 18;
         r += 1;
+      }
+
+      // 统一底色：除标题行/表头行外，其他所有单元格强制白色（避免透明导致显示成其他底色）
+      const lastRowIndex = Math.max(1, r - 1);
+      for (let rowIndex = 1; rowIndex <= lastRowIndex; rowIndex += 1) {
+        for (let colIndex = 1; colIndex <= 6; colIndex += 1) {
+          const cell = ws.getCell(rowIndex, colIndex);
+          const isGreenRow = rowIndex === 1 || rowIndex === headerRowIndex;
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: isGreenRow ? BRAND_GREEN : WHITE },
+          };
+        }
       }
 
       const buf = await wb.xlsx.writeBuffer();
