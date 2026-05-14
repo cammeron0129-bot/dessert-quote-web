@@ -69,6 +69,13 @@
                 </div>
               </label>
               <label class="field">
+                <div class="field__label">税点</div>
+                <div class="field__row">
+                  <input id="metaTaxPercent" class="input input--num" type="number" min="0" max="100" step="0.1" placeholder="例如：6" />
+                  <span class="field__suffix">%（含税价 = 合计 × 税点）</span>
+                </div>
+              </label>
+              <label class="field">
                 <div class="field__label">优惠价（可选）</div>
                 <div class="field__row">
                   <input id="metaFinalPrice" class="input input--num" type="number" min="0" step="1" placeholder="例如：2300" />
@@ -133,8 +140,12 @@
 
           <div class="totals">
             <div class="totals__row">
-              <div class="totals__label">小计</div>
+              <div class="totals__label">合计</div>
               <div class="totals__value" id="subtotal"></div>
+            </div>
+            <div class="totals__row">
+              <div class="totals__label">含税价</div>
+              <div class="totals__value" id="taxIncluded"></div>
             </div>
             <div class="totals__row">
               <div class="totals__label">折扣后</div>
@@ -161,6 +172,6 @@
 
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
-    <script src="./app.js?v=35abec2"></script>
+    <script src="./app.js?v=tax1"></script>
   </body>
 </html>

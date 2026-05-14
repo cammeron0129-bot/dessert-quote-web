@@ -43,6 +43,7 @@ function defaultMeta() {
     customer: "",
     contact: "",
     discountPercent: 100,
+    taxPercent: 0,
     finalPrice: "",
     note: "不含税",
     orderNotes:
@@ -124,6 +125,7 @@ function init() {
   const metaCustomer = el("#metaCustomer");
   const metaContact = el("#metaContact");
   const metaDiscount = el("#metaDiscount");
+  const metaTaxPercent = el("#metaTaxPercent");
   const metaFinalPrice = el("#metaFinalPrice");
   const metaNote = el("#metaNote");
   const metaOrderNotes = el("#metaOrderNotes");
@@ -139,6 +141,7 @@ function init() {
 
   const quoteTbody = el("#quoteTbody");
   const subtotalEl = el("#subtotal");
+  const taxIncludedEl = el("#taxIncluded");
   const totalAfterDiscountEl = el("#totalAfterDiscount");
 
   const sidebarResizer = document.querySelector("#sidebarResizer");
@@ -190,7 +193,9 @@ function init() {
         alert(`已选择 ${lines.length} 项，导出表格最多支持 ${MAX_TABLE_LINES} 项，本次仅导出前 ${MAX_TABLE_LINES} 项。`);
       }
 
-      const subtotal = lines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+      const subtotal = tableLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+      const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
+      const taxIncluded = subtotal * (taxPercent / 100);
       const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
       const computedAfterDiscount = subtotal * (discountPercent / 100);
       const manualFinal = toNumber(state.meta.finalPrice);
@@ -377,7 +382,8 @@ function init() {
 
     <table class="totals">
       <tbody>
-        <tr><td class="k">小计：</td><td class="num">${esc(formatMoney(subtotal))}</td></tr>
+        <tr><td class="k">合计：</td><td class="num">${esc(formatMoney(subtotal))}</td></tr>
+        <tr><td class="k">含税价：</td><td class="num">${esc(formatMoney(taxIncluded))}</td></tr>
         <tr><td class="k">折扣后：</td><td class="num">${esc(formatMoney(totalAfterDiscount))}</td></tr>
       </tbody>
     </table>
@@ -862,19 +868,27 @@ function init() {
       const manualFinal = toNumber(state.meta.finalPrice);
       const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
-      y += 22;
-      ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
-      ctx.fillStyle = muted;
-      ctx.textAlign = "right";
-      ctx.fillText("小计：", width - pad - 120, y);
-      ctx.fillStyle = brand;
-      ctx.fillText(formatMoney(subtotal), width - pad, y);
-      y += 20;
-      ctx.fillStyle = muted;
-      ctx.fillText("折扣后：", width - pad - 120, y);
-      ctx.fillStyle = brand;
-      ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
-      ctx.textAlign = "left";
+    const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
+    const taxIncluded = subtotal * (taxPercent / 100);
+
+    y += 22;
+    ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
+    ctx.fillStyle = muted;
+    ctx.textAlign = "right";
+    ctx.fillText("合计：", width - pad - 120, y);
+    ctx.fillStyle = brand;
+    ctx.fillText(formatMoney(subtotal), width - pad, y);
+    y += 20;
+    ctx.fillStyle = muted;
+    ctx.fillText("含税价：", width - pad - 120, y);
+    ctx.fillStyle = brand;
+    ctx.fillText(formatMoney(taxIncluded), width - pad, y);
+    y += 20;
+    ctx.fillStyle = muted;
+    ctx.fillText("折扣后：", width - pad - 120, y);
+    ctx.fillStyle = brand;
+    ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
+    ctx.textAlign = "left";
 
       y += 18;
       ctx.strokeStyle = border;
@@ -1106,6 +1120,8 @@ function init() {
     wrapper.appendChild(table);
 
     const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+    const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
+    const taxIncluded = subtotal * (taxPercent / 100);
     const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
     const computedAfterDiscount = subtotal * (discountPercent / 100);
     const manualFinal = toNumber(state.meta.finalPrice);
@@ -1114,7 +1130,8 @@ function init() {
     const totals = document.createElement("div");
     totals.className = "totals";
     totals.innerHTML = `
-      <div class="totals__row"><div class="totals__label">小计</div><div class="totals__value">${formatMoney(subtotal)}</div></div>
+      <div class="totals__row"><div class="totals__label">合计</div><div class="totals__value">${formatMoney(subtotal)}</div></div>
+      <div class="totals__row"><div class="totals__label">含税价</div><div class="totals__value">${formatMoney(taxIncluded)}</div></div>
       <div class="totals__row"><div class="totals__label">折扣后</div><div class="totals__value">${formatMoney(totalAfterDiscount)}</div></div>
     `;
     wrapper.appendChild(totals);
@@ -1411,6 +1428,7 @@ function init() {
     metaCustomer.value = state.meta.customer || "";
     metaContact.value = state.meta.contact || "";
     metaDiscount.value = String(toNumber(state.meta.discountPercent || 100));
+    metaTaxPercent.value = String(toNumber(state.meta.taxPercent || 0));
     metaFinalPrice.value = state.meta.finalPrice || "";
     metaNote.value = state.meta.note || "";
     metaOrderNotes.value = state.meta.orderNotes || "";
@@ -1655,12 +1673,15 @@ function init() {
     }
 
     const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
+    const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
+    const taxIncluded = subtotal * (taxPercent / 100);
     const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
     const computedAfterDiscount = subtotal * (discountPercent / 100);
     const manualFinal = toNumber(state.meta.finalPrice);
     const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
     subtotalEl.textContent = formatMoney(subtotal);
+    taxIncludedEl.textContent = formatMoney(taxIncluded);
     totalAfterDiscountEl.textContent = formatMoney(totalAfterDiscount);
   }
 
@@ -1725,6 +1746,7 @@ function init() {
     state.meta.customer = metaCustomer.value.trim();
     state.meta.contact = metaContact.value.trim();
     state.meta.discountPercent = clamp(toNumber(metaDiscount.value), 0, 100);
+    state.meta.taxPercent = clamp(toNumber(metaTaxPercent.value), 0, 100);
     state.meta.finalPrice = metaFinalPrice.value.trim();
     state.meta.note = metaNote.value.trim();
     state.meta.orderNotes = metaOrderNotes.value || "";
@@ -1746,6 +1768,7 @@ function init() {
   metaCustomer.addEventListener("change", onMetaChange);
   metaContact.addEventListener("change", onMetaChange);
   metaDiscount.addEventListener("change", onMetaChange);
+  metaTaxPercent.addEventListener("change", onMetaChange);
   metaFinalPrice.addEventListener("change", onMetaChange);
   metaNote.addEventListener("change", onMetaChange);
   metaOrderNotes.addEventListener("change", onMetaChange);
