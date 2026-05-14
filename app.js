@@ -331,73 +331,89 @@ function init() {
       </x:ExcelWorkbook>
     </xml><![endif]-->
     <style>
-      body{font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif; padding:16px; color:#111827;}
-      .title{font-size:18px; font-weight:700; margin:0 0 10px; display:flex; gap:10px; align-items:center;}
-      .logo{width:56px; height:auto;}
+      body{font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif; padding:16px; color:#111827; background:#f6f7fb;}
+      .paper{background:#fff; border:1px solid rgba(0,0,0,.10); border-radius:12px; padding:16px;}
+      .head{width:100%; border-collapse:collapse; margin-bottom:8px;}
+      .head td{border:0; padding:0; vertical-align:middle;}
+      .logo{width:64px; height:48px; object-fit:contain;}
+      .title{font-size:18px; font-weight:800; text-align:center;}
+      .sep{border-top:1px dashed rgba(0,0,0,.20); margin:10px 0;}
       table{border-collapse:collapse; width:100%;}
-      td,th{border:1px solid #e5e7eb; padding:8px; vertical-align:top;}
-      th{background:#f8fafc; text-align:left;}
-      .meta{margin:0 0 12px;}
-      .meta td{border:0; padding:2px 0;}
-      .meta .k{color:#6b7280; width:80px;}
-      .num{text-align:right; white-space:nowrap;}
-      .img{width:64px;}
-      .totals{margin-top:10px; width:100%;}
-      .totals td{border:0; padding:4px 0;}
-      .totals .k{color:#6b7280;}
-      .notesTitle{margin-top:14px; font-weight:700;}
-      .notes{white-space:pre-wrap; color:#374151; margin-top:6px;}
+      td,th{border-bottom:1px solid rgba(0,0,0,.10); padding:8px 6px; vertical-align:top;}
+      thead th{border-bottom:1px solid rgba(0,0,0,.18); background:#f8fafc; text-align:left; font-size:12px;}
+      .meta{width:100%; margin:0;}
+      .meta td{border:0; padding:2px 0; font-size:12px;}
+      .meta .k{color:rgba(17,24,39,.70); font-weight:700; width:84px;}
+      .num{text-align:right; white-space:nowrap; font-variant-numeric: tabular-nums;}
+      .img{width:74px;}
+      .thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,.12); background:#fff;}
+      .totals{margin-top:10px; width:100%; border-collapse:collapse;}
+      .totals td{border:0; padding:4px 0; font-size:13px;}
+      .totals .k{color:rgba(17,24,39,.70); font-weight:800; width:84px;}
+      .totals .v{font-weight:900; text-align:right; font-variant-numeric: tabular-nums;}
+      .totals .hot{color:#dc2626;}
+      .notesTitle{margin-top:12px; font-weight:800; font-size:12px;}
+      .notes{white-space:pre-wrap; color:rgba(17,24,39,.78); margin-top:6px; font-size:11px; border:1px solid rgba(0,0,0,.10); border-radius:10px; padding:10px; background:rgba(0,0,0,.03);}
     </style>
   </head>
   <body>
-    <div class="title">
-      ${
-        logoDataUrl
-          ? `<img class="logo" src="${logoDataUrl}" alt="当夏烘焙" />`
-          : logoUrl
-            ? `<img class="logo" src="${logoUrl}" alt="当夏烘焙" />`
-            : ""
-      }
-      <div>【当夏烘焙】甜品台服务 报价单</div>
-    </div>
-
-    <table class="meta">
-      <tbody>
-        ${metaRows
-          .map(
-            ([k, v]) =>
-              `<tr><td class="k">${esc(k)}：</td><td>${esc(v)}</td></tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>
-
-    <table>
-      <thead>
+    <div class="paper">
+      <table class="head">
         <tr>
-          <th style="width:52px">序号</th>
-          <th style="width:74px">图片</th>
-          <th>内容</th>
-          <th style="width:70px">数量</th>
-          <th style="width:90px">单价</th>
-          <th style="width:90px">总价</th>
+          <td style="width:72px">
+            ${
+              logoDataUrl
+                ? `<img class="logo" src="${logoDataUrl}" alt="当夏烘焙" />`
+                : logoUrl
+                  ? `<img class="logo" src="${logoUrl}" alt="当夏烘焙" />`
+                  : ""
+            }
+          </td>
+          <td class="title">【当夏烘焙】甜品台服务 报价单</td>
+          <td style="width:72px"></td>
         </tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>
+      </table>
 
-    <table class="totals">
-      <tbody>
-        <tr><td class="k">合计：</td><td class="num">${esc(formatMoney(subtotal))}</td></tr>
-        <tr><td class="k">含税价：</td><td class="num">${esc(formatMoney(taxIncluded))}</td></tr>
-        <tr><td class="k" style="color:#dc2626;font-weight:800">优惠价：</td><td class="num" style="color:#dc2626;font-weight:900">${esc(formatMoney(totalAfterDiscount))}</td></tr>
-      </tbody>
-    </table>
+      <div class="sep"></div>
 
-    <div class="notesTitle">${esc(state.meta.orderNotesTitle || "订购说明")}</div>
-    <div class="notes">${esc(state.meta.orderNotes || "")}</div>
+      <table class="meta">
+        <tbody>
+          ${metaRows
+            .map(([k, v]) => `<tr><td class="k">${esc(k)}：</td><td>${esc(v)}</td></tr>`)
+            .join("")}
+        </tbody>
+      </table>
+
+      <div class="sep"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:52px">序号</th>
+            <th style="width:74px">图片</th>
+            <th>内容</th>
+            <th style="width:70px">数量</th>
+            <th style="width:90px">单价</th>
+            <th style="width:90px">总价</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml.replaceAll('style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd"', 'class="thumb"')}
+        </tbody>
+      </table>
+
+      <table class="totals">
+        <tbody>
+          <tr><td class="k">合计：</td><td class="v">${esc(formatMoney(subtotal))}</td></tr>
+          <tr><td class="k">含税价：</td><td class="v">${esc(formatMoney(taxIncluded))}</td></tr>
+          <tr><td class="k hot">优惠价：</td><td class="v hot">${esc(formatMoney(totalAfterDiscount))}</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sep"></div>
+      <div class="notesTitle">${esc(state.meta.orderNotesTitle || "订购说明")}</div>
+      <div class="notes">${esc(state.meta.orderNotes || "")}</div>
+    </div>
   </body>
 </html>`;
       const html = `\ufeff${excelHtml}`;
