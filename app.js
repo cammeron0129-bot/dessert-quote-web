@@ -1401,12 +1401,6 @@ function init() {
     btnExportPdf.textContent = "生成中...";
 
     try {
-      const w = window.open("about:blank", "_blank", "noopener,noreferrer");
-      if (!w) {
-        alert("浏览器拦截了新页面。请允许弹窗后重试导出 PDF。");
-        return;
-      }
-
       // A4 at 96dpi (approx). We'll scale content to fit inside one page with margins.
       const A4_W = 794;
       const A4_H = 1123;
@@ -1417,12 +1411,25 @@ function init() {
       // Ensure latest render
       // (buildExportNode uses current state)
 
-      w.document.open();
-      w.document.write(`<!doctype html>
+      // Use an iframe instead of window.open to avoid popup blockers.
+      const frame = document.createElement("iframe");
+      frame.style.position = "fixed";
+      frame.style.right = "0";
+      frame.style.bottom = "0";
+      frame.style.width = "0";
+      frame.style.height = "0";
+      frame.style.border = "0";
+      frame.setAttribute("aria-hidden", "true");
+      document.body.appendChild(frame);
+
+      const doc = frame.contentDocument;
+      doc.open();
+      doc.write(`<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="${location.href}">
     <title>${exportName}</title>
     <link rel="stylesheet" href="./styles.css?v=highlight1" />
     <style>
@@ -1464,13 +1471,13 @@ function init() {
     </script>
   </body>
 </html>`);
-      w.document.close();
+      doc.close();
 
-      const mount = w.document.getElementById("fit");
-      mount.appendChild(w.document.importNode(node, true));
+      const mount = doc.getElementById("fit");
+      mount.appendChild(doc.importNode(node, true));
 
       const waitImages = () => {
-        const imgs = Array.from(w.document.images || []);
+        const imgs = Array.from(doc.images || []);
         if (imgs.length === 0) return Promise.resolve();
         return Promise.all(
           imgs.map((img) => {
@@ -1486,7 +1493,7 @@ function init() {
 
       await waitImages();
       // Fit to one page
-      const stage = w.document.querySelector(".stage");
+      const stage = doc.querySelector(".stage");
       const rectStage = stage.getBoundingClientRect();
       const rectContent = mount.getBoundingClientRect();
       const sx = rectStage.width / rectContent.width;
@@ -1496,9 +1503,20 @@ function init() {
 
       // Print (user chooses Save as PDF)
       setTimeout(() => {
-        try { w.focus(); } catch {}
-        try { w.print(); } catch {}
+        try {
+          frame.contentWindow.focus();
+        } catch {}
+        try {
+          frame.contentWindow.print();
+        } catch {}
       }, 250);
+
+      // Cleanup later (after print dialog opens)
+      setTimeout(() => {
+        try {
+          frame.remove();
+        } catch {}
+      }, 30_000);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
