@@ -1508,12 +1508,50 @@ function init() {
       const rectContent = imported.getBoundingClientRect();
       const sx = rectStage.width / rectContent.width;
       const s = Math.min(1, sx);
-      measureScale.style.transform = `scale(${s})`;
 
-      // Re-measure scaled height after applying scale
+      // 计算分页断点（避免切割表格行/块）
+      const contentTop = rectContent.top;
+      const candidates = new Set([0]);
+      const rowEls = Array.from(imported.querySelectorAll("tbody tr"));
+      for (const tr of rowEls) {
+        const rtr = tr.getBoundingClientRect();
+        candidates.add(Math.max(0, rtr.top - contentTop));
+      }
+      const blockEls = [
+        imported.querySelector(".totals"),
+        imported.querySelector(".paper__foot"),
+      ].filter(Boolean);
+      for (const elx of blockEls) {
+        const rEl = elx.getBoundingClientRect();
+        candidates.add(Math.max(0, rEl.top - contentTop));
+      }
+      const sorted = Array.from(candidates)
+        .map((n) => Math.floor(n))
+        .filter((n) => Number.isFinite(n))
+        .sort((a, b) => a - b);
+
+      const contentHeight = Math.ceil(rectContent.height);
       const stageHeight = rectStage.height;
-      const offsetStepUnscaled = stageHeight / s;
-      const totalPages = Math.max(1, Math.ceil(imported.getBoundingClientRect().height / offsetStepUnscaled));
+      const pageHeightUnscaled = stageHeight / s;
+
+      const starts = [];
+      let start = 0;
+      const EPS = 2;
+      while (start < contentHeight - EPS) {
+        starts.push(start);
+        const max = start + pageHeightUnscaled;
+        // 找到不超过 max 的最后一个断点（且必须推进）
+        let next = max;
+        for (let i = 0; i < sorted.length; i += 1) {
+          const bp = sorted[i];
+          if (bp <= start + EPS) continue;
+          if (bp < max - 6) next = bp;
+          else break;
+        }
+        if (next <= start + EPS) next = max;
+        start = next;
+      }
+      const totalPages = Math.max(1, starts.length);
 
       // Clear and rebuild pages with clipped offsets
       pagesEl.innerHTML = "";
@@ -1527,7 +1565,7 @@ function init() {
         sc.style.transform = `scale(${s})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
-        clone.style.top = `-${Math.floor(i * offsetStepUnscaled)}px`;
+        clone.style.top = `-${Math.floor(starts[i] || 0)}px`;
         sc.appendChild(clone);
         st.appendChild(sc);
         page.appendChild(st);
