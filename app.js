@@ -449,6 +449,8 @@ function init() {
         properties: { defaultRowHeight: 18 },
         pageSetup: { paperSize: 9, orientation: "portrait" },
       });
+      const BRAND_GREEN = "FFA4CC9A";
+      const WHITE = "FFFFFFFF";
 
       // Columns
       ws.columns = [
@@ -464,15 +466,22 @@ function init() {
       ws.mergeCells("A1:F1");
       const titleCell = ws.getCell("A1");
       titleCell.value = "【当夏烘焙】甜品台服务 报价单";
-      titleCell.font = { name: "PingFang SC", size: 16, bold: true };
+      titleCell.font = { name: "PingFang SC", size: 16, bold: true, color: { argb: "FFFFFFFF" } };
       titleCell.alignment = { vertical: "middle", horizontal: "center" };
+      titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_GREEN } };
       ws.getRow(1).height = 34;
+      // 标题行底色需覆盖整行
+      for (let c = 1; c <= 6; c += 1) {
+        const cell = ws.getCell(1, c);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_GREEN } };
+      }
 
-      // Add logo at A1 area
+      // Add logo at title row (right)
       try {
         const logoBuf = await toArrayBufferFromUrl("./assets/brand/logo.png");
         const logoId = wb.addImage({ buffer: logoBuf, extension: "png" });
-        ws.addImage(logoId, { tl: { col: 0.1, row: 0.15 }, ext: { width: 64, height: 48 } });
+        // place near column F, row 1 right side
+        ws.addImage(logoId, { tl: { col: 5.15, row: 0.15 }, ext: { width: 54, height: 40 }, editAs: "oneCell" });
       } catch {
         // ignore
       }
@@ -494,6 +503,8 @@ function init() {
         ws.getCell(`A${r}`).alignment = { vertical: "middle", horizontal: "right" };
         ws.getCell(`C${r}`).value = String(v || "");
         ws.getCell(`C${r}`).alignment = { vertical: "middle", horizontal: "left" };
+        // ensure white background
+        for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
         r += 1;
       }
 
@@ -506,7 +517,8 @@ function init() {
       headerRow.alignment = { vertical: "middle", horizontal: "left" };
       headerRow.height = 20;
       headerRow.eachCell((cell) => {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8FAFC" } };
+        // 表格底色全白
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
         cell.border = { bottom: { style: "thin", color: { argb: "FFCBD5E1" } } };
       });
       r += 1;
@@ -550,6 +562,7 @@ function init() {
         for (let c = 1; c <= 6; c += 1) {
           const cell = row.getCell(c);
           cell.border = { bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
           if (c === 4 || c === 5 || c === 6) cell.alignment = { vertical: "middle", horizontal: "right" };
           if (c === 1) cell.alignment = { vertical: "middle", horizontal: "right" };
         }
@@ -576,6 +589,7 @@ function init() {
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true };
       ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 1;
 
       ws.mergeCells(`A${r}:E${r}`);
@@ -586,6 +600,7 @@ function init() {
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true };
       ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 1;
 
       ws.mergeCells(`A${r}:E${r}`);
@@ -596,17 +611,28 @@ function init() {
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true, color: { argb: "FFDC2626" } };
       ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 2;
 
       // Notes
       ws.mergeCells(`A${r}:F${r}`);
       ws.getCell(`A${r}`).value = state.meta.orderNotesTitle || "订购说明";
       ws.getCell(`A${r}`).font = { bold: true };
+      ws.getCell(`A${r}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 1;
-      ws.mergeCells(`A${r}:F${r + 3}`);
-      ws.getCell(`A${r}`).value = state.meta.orderNotes || "";
-      ws.getCell(`A${r}`).alignment = { wrapText: true, vertical: "top" };
-      ws.getRow(r).height = 54;
+      const noteLines = String(state.meta.orderNotes || "")
+        .split("\n")
+        .map((x) => x.trimEnd())
+        .filter((x) => x.length > 0);
+      if (noteLines.length === 0) noteLines.push("");
+      for (const line of noteLines) {
+        ws.mergeCells(`A${r}:F${r}`);
+        ws.getCell(`A${r}`).value = line;
+        ws.getCell(`A${r}`).alignment = { wrapText: true, vertical: "top" };
+        ws.getCell(`A${r}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
+        ws.getRow(r).height = 18;
+        r += 1;
+      }
 
       const buf = await wb.xlsx.writeBuffer();
       const blob = new Blob([buf], {
