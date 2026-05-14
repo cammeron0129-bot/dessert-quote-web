@@ -195,7 +195,7 @@ function init() {
 
       const subtotal = tableLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
       const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
-      const taxIncluded = subtotal * (taxPercent / 100);
+      const taxIncluded = subtotal * (1 + taxPercent / 100);
       const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
       const computedAfterDiscount = subtotal * (discountPercent / 100);
       const manualFinal = toNumber(state.meta.finalPrice);
@@ -869,7 +869,7 @@ function init() {
       const totalAfterDiscount = manualFinal > 0 ? manualFinal : computedAfterDiscount;
 
     const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
-    const taxIncluded = subtotal * (taxPercent / 100);
+    const taxIncluded = subtotal * (1 + taxPercent / 100);
 
     y += 22;
     ctx.font = "14px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
@@ -1120,8 +1120,8 @@ function init() {
     wrapper.appendChild(table);
 
     const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
-    const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
-    const taxIncluded = subtotal * (taxPercent / 100);
+      const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
+      const taxIncluded = subtotal * (1 + taxPercent / 100);
     const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
     const computedAfterDiscount = subtotal * (discountPercent / 100);
     const manualFinal = toNumber(state.meta.finalPrice);
@@ -1674,7 +1674,7 @@ function init() {
 
     const subtotal = state.quoteLines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
     const taxPercent = clamp(toNumber(state.meta.taxPercent || 0), 0, 100);
-    const taxIncluded = subtotal * (taxPercent / 100);
+    const taxIncluded = subtotal * (1 + taxPercent / 100);
     const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
     const computedAfterDiscount = subtotal * (discountPercent / 100);
     const manualFinal = toNumber(state.meta.finalPrice);
