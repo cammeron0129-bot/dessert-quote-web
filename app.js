@@ -95,6 +95,14 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function debounce(fn, waitMs) {
+  let t = null;
+  return (...args) => {
+    if (t) clearTimeout(t);
+    t = setTimeout(() => fn(...args), waitMs);
+  };
+}
+
 function init() {
   const menu = [
     SERVICE_FEE_MENU_ITEM,
@@ -1498,13 +1506,13 @@ function init() {
         const nameInput = document.createElement("input");
         nameInput.className = "cellInput";
         nameInput.value = line.name || "";
-        nameInput.addEventListener("change", () => {
+        nameInput.addEventListener("input", debounce(() => {
           const target = state.quoteLines.find((x) => x.id === line.id);
           if (!target) return;
           target.name = nameInput.value.trim();
           saveState(state);
           renderQuote();
-        });
+        }, 120));
 
         const grid = document.createElement("div");
         grid.className = "quoteCard__grid";
@@ -1515,13 +1523,13 @@ function init() {
         qtyInput.min = "0";
         qtyInput.step = "1";
         qtyInput.value = String(toNumber(line.qty));
-        qtyInput.addEventListener("change", () => {
+        qtyInput.addEventListener("input", debounce(() => {
           const target = state.quoteLines.find((x) => x.id === line.id);
           if (!target) return;
           target.qty = clamp(toNumber(qtyInput.value), 0, 999999);
           saveState(state);
           renderQuote();
-        });
+        }, 120));
 
         const unitInput = document.createElement("input");
         unitInput.className = "cellInput cellInput--num";
@@ -1529,13 +1537,13 @@ function init() {
         unitInput.min = "0";
         unitInput.step = "0.5";
         unitInput.value = String(toNumber(line.unitPrice));
-        unitInput.addEventListener("change", () => {
+        unitInput.addEventListener("input", debounce(() => {
           const target = state.quoteLines.find((x) => x.id === line.id);
           if (!target) return;
           target.unitPrice = clamp(toNumber(unitInput.value), 0, 999999);
           saveState(state);
           renderQuote();
-        });
+        }, 120));
 
         const total = toNumber(line.qty) * toNumber(line.unitPrice);
         const totalBox = document.createElement("div");
@@ -1756,6 +1764,9 @@ function init() {
     renderQuote();
   }
 
+  // iOS 上很多输入场景不会触发 change（不失焦），用 input + debounce 确保“最新版”自动保存
+  const onMetaInput = debounce(onMetaChange, 120);
+
   for (const t of tabs) {
     t.addEventListener("click", () => setActiveTab(t.dataset.tab));
   }
@@ -1763,16 +1774,21 @@ function init() {
   menuSearch.addEventListener("input", renderMenu);
   onlySelected.addEventListener("change", renderMenu);
 
-  metaDate.addEventListener("change", onMetaChange);
-  metaLocation.addEventListener("change", onMetaChange);
-  metaCustomer.addEventListener("change", onMetaChange);
-  metaContact.addEventListener("change", onMetaChange);
-  metaDiscount.addEventListener("change", onMetaChange);
-  metaTaxPercent.addEventListener("change", onMetaChange);
-  metaFinalPrice.addEventListener("change", onMetaChange);
-  metaNote.addEventListener("change", onMetaChange);
-  metaOrderNotes.addEventListener("change", onMetaChange);
-  metaOrderNotesTitle.addEventListener("change", onMetaChange);
+  for (const node of [
+    metaDate,
+    metaLocation,
+    metaCustomer,
+    metaContact,
+    metaDiscount,
+    metaTaxPercent,
+    metaFinalPrice,
+    metaNote,
+    metaOrderNotes,
+    metaOrderNotesTitle,
+  ]) {
+    node.addEventListener("change", onMetaChange);
+    node.addEventListener("input", onMetaInput);
+  }
 
   qOrderNotes.addEventListener("input", () => {
     state.meta.orderNotes = qOrderNotes.textContent || "";
