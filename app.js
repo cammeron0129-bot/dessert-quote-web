@@ -296,7 +296,7 @@ function init() {
             }
           }
           const img = src
-            ? `<img src="${src}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd" />`
+            ? `<img src="${src}" width="48" height="48" style="display:block;border:1px solid rgba(0,0,0,.12);background:#fff" />`
             : "";
           return `
             <tr>
@@ -345,8 +345,7 @@ function init() {
       .meta td{border:0; padding:2px 0; font-size:12px;}
       .meta .k{color:rgba(17,24,39,.70); font-weight:700; width:84px;}
       .num{text-align:right; white-space:nowrap; font-variant-numeric: tabular-nums;}
-      .img{width:74px;}
-      .thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,.12); background:#fff;}
+      .img{width:74px; text-align:center; line-height:0; padding-top:6px; padding-bottom:6px;}
       .totals{margin-top:10px; width:100%; border-collapse:collapse;}
       .totals td{border:0; padding:4px 0; font-size:13px;}
       .totals .k{color:rgba(17,24,39,.70); font-weight:800; width:84px;}
@@ -398,7 +397,7 @@ function init() {
           </tr>
         </thead>
         <tbody>
-          ${rowsHtml.replaceAll('style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd"', 'class="thumb"')}
+          ${rowsHtml}
         </tbody>
       </table>
 
