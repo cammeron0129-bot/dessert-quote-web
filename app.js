@@ -181,7 +181,14 @@ function init() {
     try {
       const isMobile = document.body.classList.contains("mobile");
       const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
-      const inlineImages = !isMobile && lines.length <= 30;
+      // 手机端导出给 WPS/Excel 打开时，更需要“文件自包含”（内嵌缩略图）才能避免图片/内容空白。
+      // 为避免文件过大：仅使用缩略图，并限制在合理数量（与长图一致最多 50）。
+      const MAX_TABLE_LINES = 50;
+      const tableLines = lines.slice(0, MAX_TABLE_LINES);
+      const inlineImages = (isMobile || lines.length <= 30) && tableLines.length <= 50;
+      if (lines.length > MAX_TABLE_LINES) {
+        alert(`已选择 ${lines.length} 项，导出表格最多支持 ${MAX_TABLE_LINES} 项，本次仅导出前 ${MAX_TABLE_LINES} 项。`);
+      }
 
       const subtotal = lines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
       const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
@@ -226,7 +233,7 @@ function init() {
         return results;
       }
 
-      const imgUrls = lines.map((l) => {
+      const imgUrls = tableLines.map((l) => {
         if (!l.source?.startsWith("menu:")) return "";
         const name = l.source.slice("menu:".length);
         return menuThumbForName(name) || menuImageForLine(l) || "";
@@ -261,7 +268,7 @@ function init() {
         ["备注", state.meta.note || ""],
       ];
 
-      const rowsHtml = lines
+      const rowsHtml = tableLines
         .map((l, idx) => {
           const qty = toNumber(l.qty);
           const unit = toNumber(l.unitPrice);
@@ -291,12 +298,25 @@ function init() {
         })
         .join("");
 
-      const html = `
+      // Excel/WPS 兼容性：使用“Excel HTML”包装 + UTF-8 BOM
+      const excelHtml = `
 <!doctype html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
   <head>
     <meta charset="utf-8" />
     <title>${esc(exportName)}</title>
+    <!--[if gte mso 9]><xml>
+      <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+          <x:ExcelWorksheet>
+            <x:Name>报价单</x:Name>
+            <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+          </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+      </x:ExcelWorkbook>
+    </xml><![endif]-->
     <style>
       body{font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Arial,sans-serif; padding:16px; color:#111827;}
       .title{font-size:18px; font-weight:700; margin:0 0 10px; display:flex; gap:10px; align-items:center;}
@@ -366,6 +386,7 @@ function init() {
     <div class="notes">${esc(state.meta.orderNotes || "")}</div>
   </body>
 </html>`;
+      const html = `\ufeff${excelHtml}`;
 
       // 手机端：优先通过“系统分享”导出 .xls（Excel/WPS 更容易识别），避免 WPS 打开 .html 空白。
       if (isMobile) {
