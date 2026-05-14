@@ -229,7 +229,7 @@ function init() {
   async function loadImageBitmap(url) {
     const abs = new URL(url, location.href).toString();
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20_000);
+    const timeout = setTimeout(() => controller.abort(), 30_000);
     try {
       const res = await fetch(abs, { cache: "force-cache", signal: controller.signal });
       const blob = await res.blob();
@@ -248,7 +248,7 @@ function init() {
             URL.revokeObjectURL(objUrl);
           } catch {}
           reject(new Error("图片解码超时"));
-        }, 20_000);
+        }, 30_000);
         img.onload = () => {
           clearTimeout(t);
           resolve(img);
@@ -426,7 +426,13 @@ function init() {
     const contentW = width - pad * 2;
     const nameW = Math.max(140, contentW - 52 - imgSize - 12 - 210);
 
-    const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+    // 移动端和电脑端都需要稳定支持较多产品（最多 50 个带图导出）
+    const MAX_EXPORT_LINES = 50;
+    const allLines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+    const lines = allLines.slice(0, MAX_EXPORT_LINES);
+    if (allLines.length > MAX_EXPORT_LINES) {
+      alert(`已选择 ${allLines.length} 项，导出长图最多支持 ${MAX_EXPORT_LINES} 项，本次仅导出前 ${MAX_EXPORT_LINES} 项。`);
+    }
     const rowImgUrls = lines.map((l) => {
       if (!l.source?.startsWith("menu:")) return null;
       const name = l.source.slice("menu:".length);
@@ -435,7 +441,8 @@ function init() {
     });
 
     // 产品很多时，若一次性并发加载所有图片，移动端（尤其 iOS）容易丢图/解码失败。
-    const bitmaps = await loadBitmapsWithLimit(rowImgUrls, isMobile ? 4 : 10);
+    // 这里做“限并发 + 重试”，并且手机/电脑一致配置，保证最多 50 张也能稳定加载出来。
+    const bitmaps = await loadBitmapsWithLimit(rowImgUrls, 8);
 
     const tmp = document.createElement("canvas");
     const tctx = tmp.getContext("2d");
