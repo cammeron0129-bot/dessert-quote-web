@@ -229,7 +229,7 @@ function init() {
   async function loadImageBitmap(url) {
     const abs = new URL(url, location.href).toString();
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => controller.abort(), 20_000);
     try {
       const res = await fetch(abs, { cache: "force-cache", signal: controller.signal });
       const blob = await res.blob();
@@ -248,7 +248,7 @@ function init() {
             URL.revokeObjectURL(objUrl);
           } catch {}
           reject(new Error("图片解码超时"));
-        }, 10_000);
+        }, 20_000);
         img.onload = () => {
           clearTimeout(t);
           resolve(img);
@@ -272,6 +272,45 @@ function init() {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  async function loadBitmapsWithLimit(urls, limit) {
+    const results = new Array(urls.length).fill(null);
+    const cache = new Map(); // absUrl -> bitmap/img|null
+    let nextIndex = 0;
+
+    async function worker() {
+      while (nextIndex < urls.length) {
+        const i = nextIndex++;
+        const u = urls[i];
+        if (!u) continue;
+        const abs = new URL(u, location.href).toString();
+        if (cache.has(abs)) {
+          results[i] = cache.get(abs);
+          continue;
+        }
+        let bm = null;
+        try {
+          bm = await loadImageBitmap(u);
+        } catch {
+          // retry once (弱网/移动端偶发失败)
+          try {
+            await new Promise((r) => setTimeout(r, 180));
+            bm = await loadImageBitmap(u);
+          } catch {
+            bm = null;
+          }
+        }
+        cache.set(abs, bm);
+        results[i] = bm;
+      }
+    }
+
+    const workers = [];
+    const n = Math.max(1, Math.min(limit, urls.length));
+    for (let i = 0; i < n; i += 1) workers.push(worker());
+    await Promise.all(workers);
+    return results;
   }
 
   function prepareExportWindow(exportName) {
@@ -395,16 +434,8 @@ function init() {
       return item?.imageThumb || item?.image || null;
     });
 
-    const bitmaps = await Promise.all(
-      rowImgUrls.map(async (u) => {
-        if (!u) return null;
-        try {
-          return await loadImageBitmap(u);
-        } catch {
-          return null;
-        }
-      })
-    );
+    // 产品很多时，若一次性并发加载所有图片，移动端（尤其 iOS）容易丢图/解码失败。
+    const bitmaps = await loadBitmapsWithLimit(rowImgUrls, isMobile ? 4 : 10);
 
     const tmp = document.createElement("canvas");
     const tctx = tmp.getContext("2d");
