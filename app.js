@@ -181,6 +181,7 @@ function init() {
     try {
       const isMobile = document.body.classList.contains("mobile");
       const lines = state.quoteLines.map((l, idx) => ({ ...l, seq: idx + 1 }));
+      const inlineImages = !isMobile && lines.length <= 30;
 
       const subtotal = lines.reduce((sum, l) => sum + toNumber(l.qty) * toNumber(l.unitPrice), 0);
       const discountPercent = clamp(toNumber(state.meta.discountPercent || 100), 0, 100);
@@ -230,12 +231,20 @@ function init() {
         const name = l.source.slice("menu:".length);
         return menuThumbForName(name) || menuImageForLine(l) || "";
       });
-      const imgDataUrls = await loadDataUrlsWithLimit(imgUrls, 8);
+      const imgDataUrls = inlineImages ? await loadDataUrlsWithLimit(imgUrls, 8) : [];
 
       let logoDataUrl = "";
+      let logoUrl = "";
       try {
-        logoDataUrl = await toDataUrlFromUrl("./assets/brand/logo.png");
-      } catch {}
+        logoUrl = new URL("./assets/brand/logo.png", location.href).toString();
+      } catch {
+        logoUrl = "./assets/brand/logo.png";
+      }
+      if (inlineImages) {
+        try {
+          logoDataUrl = await toDataUrlFromUrl("./assets/brand/logo.png");
+        } catch {}
+      }
 
       const esc = (s) =>
         String(s ?? "")
@@ -257,8 +266,17 @@ function init() {
           const qty = toNumber(l.qty);
           const unit = toNumber(l.unitPrice);
           const total = qty * unit;
-          const img = imgDataUrls[idx]
-            ? `<img src="${imgDataUrls[idx]}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd" />`
+          let src = "";
+          if (inlineImages) src = imgDataUrls[idx] || "";
+          else if (imgUrls[idx]) {
+            try {
+              src = new URL(imgUrls[idx], location.href).toString();
+            } catch {
+              src = imgUrls[idx];
+            }
+          }
+          const img = src
+            ? `<img src="${src}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #ddd" />`
             : "";
           return `
             <tr>
@@ -300,7 +318,13 @@ function init() {
   </head>
   <body>
     <div class="title">
-      ${logoDataUrl ? `<img class="logo" src="${logoDataUrl}" alt="当夏烘焙" />` : ""}
+      ${
+        logoDataUrl
+          ? `<img class="logo" src="${logoDataUrl}" alt="当夏烘焙" />`
+          : logoUrl
+            ? `<img class="logo" src="${logoUrl}" alt="当夏烘焙" />`
+            : ""
+      }
       <div>【当夏烘焙】甜品台服务 报价单</div>
     </div>
 
