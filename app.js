@@ -367,24 +367,27 @@ function init() {
   </body>
 </html>`;
 
-      // 手机端（尤其 iOS）通常无法预览/打开 .xls：改为导出可直接浏览器打开的 .html，并提供“分享保存”。
+      // 手机端：优先通过“系统分享”导出 .xls（Excel/WPS 更容易识别），避免 WPS 打开 .html 空白。
       if (isMobile) {
+        const xlsFile = new File([html], `${exportName}.xls`, {
+          type: "application/vnd.ms-excel;charset=utf-8",
+        });
+
         // 1) 优先直接调用系统分享（不依赖弹窗），保存到“文件”里后用 WPS/Excel 打开
         try {
           if (navigator?.share) {
-            const file = new File([html], `${exportName}.html`, { type: "text/html;charset=utf-8" });
-            await navigator.share({ files: [file], title: exportName });
+            await navigator.share({ files: [xlsFile], title: exportName });
             return;
           }
         } catch {
           // ignore, fallback below
         }
 
-        // 2) 无法分享时：同页打开 HTML（不弹窗），用户可用浏览器“分享”菜单保存/打印
+        // 2) 无法分享时：同页打开预览（不弹窗），用户可用浏览器“分享”菜单保存
         try {
           const blob = new Blob([html], { type: "text/html;charset=utf-8" });
           const url = URL.createObjectURL(blob);
-          alert("将打开表格预览页。可使用浏览器分享菜单保存到“文件”，再用 WPS/Excel 打开。返回本页面请点浏览器“返回”。");
+          alert("将打开表格预览页。请用浏览器“分享/下载”保存文件（建议保存为 .xls），再用 WPS/Excel 打开。返回本页面请点浏览器“返回”。");
           window.location.assign(url);
           setTimeout(() => {
             try {
