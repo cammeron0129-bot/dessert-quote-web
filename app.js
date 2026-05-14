@@ -501,7 +501,7 @@ function init() {
         ws.mergeCells(`C${r}:F${r}`);
         ws.getCell(`A${r}`).value = `${k}：`;
         ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
-        ws.getCell(`A${r}`).alignment = { vertical: "middle", horizontal: "right" };
+        ws.getCell(`A${r}`).alignment = { vertical: "middle", horizontal: "left" };
         ws.getCell(`C${r}`).value = String(v || "");
         ws.getCell(`C${r}`).alignment = { vertical: "middle", horizontal: "left" };
         // ensure white background
@@ -565,8 +565,8 @@ function init() {
           const cell = row.getCell(c);
           cell.border = { bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
           cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
-          if (c === 4 || c === 5 || c === 6) cell.alignment = { vertical: "middle", horizontal: "right" };
-          if (c === 1) cell.alignment = { vertical: "middle", horizontal: "right" };
+          if (c === 4 || c === 5 || c === 6) cell.alignment = { vertical: "middle", horizontal: "left" };
+          if (c === 1) cell.alignment = { vertical: "middle", horizontal: "left" };
         }
         // image in column B (cell 2)
         const imgSpec = imgBuffers[i];
@@ -586,33 +586,33 @@ function init() {
       ws.mergeCells(`A${r}:E${r}`);
       ws.getCell(`A${r}`).value = "合计：";
       ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
-      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`A${r}`).alignment = { horizontal: "left", vertical: "middle" };
       ws.getCell(`F${r}`).value = subtotal;
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true };
-      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).alignment = { horizontal: "left", vertical: "middle" };
       for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 1;
 
       ws.mergeCells(`A${r}:E${r}`);
       ws.getCell(`A${r}`).value = "含税价：";
       ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FF6B7280" } };
-      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`A${r}`).alignment = { horizontal: "left", vertical: "middle" };
       ws.getCell(`F${r}`).value = taxIncluded;
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true };
-      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).alignment = { horizontal: "left", vertical: "middle" };
       for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 1;
 
       ws.mergeCells(`A${r}:E${r}`);
       ws.getCell(`A${r}`).value = "优惠价：";
       ws.getCell(`A${r}`).font = { bold: true, color: { argb: "FFDC2626" } };
-      ws.getCell(`A${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`A${r}`).alignment = { horizontal: "left", vertical: "middle" };
       ws.getCell(`F${r}`).value = totalAfterDiscount;
       ws.getCell(`F${r}`).numFmt = "0.00";
       ws.getCell(`F${r}`).font = { bold: true, color: { argb: "FFDC2626" } };
-      ws.getCell(`F${r}`).alignment = { horizontal: "right", vertical: "middle" };
+      ws.getCell(`F${r}`).alignment = { horizontal: "left", vertical: "middle" };
       for (let c = 1; c <= 6; c += 1) ws.getCell(r, c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: WHITE } };
       r += 2;
 
