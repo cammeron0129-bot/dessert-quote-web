@@ -404,6 +404,8 @@ body {
 .totals__row { display: grid; grid-template-columns: 90px 140px; gap: 12px; align-items: center; }
 .totals__label { font-size: 12px; color: rgba(17,24,39,0.7); font-weight: 700; text-align: right; }
 .totals__value { font-size: 16px; font-weight: 900; text-align: right; }
+.totals__row--highlight .totals__label,
+.totals__row--highlight .totals__value { color: #dc2626; font-weight: 900; }
 
 .paper__foot { margin-top: 14px; border-top: 1px dashed rgba(0,0,0,0.18); padding-top: 12px; }
 .paper__footTitle { font-weight: 800; margin-bottom: 6px; font-size: 12px; }

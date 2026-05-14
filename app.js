@@ -392,7 +392,7 @@ function init() {
       <tbody>
         <tr><td class="k">合计：</td><td class="num">${esc(formatMoney(subtotal))}</td></tr>
         <tr><td class="k">含税价：</td><td class="num">${esc(formatMoney(taxIncluded))}</td></tr>
-        <tr><td class="k">折扣后：</td><td class="num">${esc(formatMoney(totalAfterDiscount))}</td></tr>
+        <tr><td class="k" style="color:#dc2626;font-weight:800">优惠价：</td><td class="num" style="color:#dc2626;font-weight:900">${esc(formatMoney(totalAfterDiscount))}</td></tr>
       </tbody>
     </table>
 
@@ -893,8 +893,8 @@ function init() {
     ctx.fillText(formatMoney(taxIncluded), width - pad, y);
     y += 20;
     ctx.fillStyle = muted;
-    ctx.fillText("折扣后：", width - pad - 120, y);
-    ctx.fillStyle = brand;
+    ctx.fillText("优惠价：", width - pad - 120, y);
+    ctx.fillStyle = "#dc2626";
     ctx.fillText(formatMoney(totalAfterDiscount), width - pad, y);
     ctx.textAlign = "left";
 
@@ -1140,7 +1140,7 @@ function init() {
     totals.innerHTML = `
       <div class="totals__row"><div class="totals__label">合计</div><div class="totals__value">${formatMoney(subtotal)}</div></div>
       <div class="totals__row"><div class="totals__label">含税价</div><div class="totals__value">${formatMoney(taxIncluded)}</div></div>
-      <div class="totals__row"><div class="totals__label">折扣后</div><div class="totals__value">${formatMoney(totalAfterDiscount)}</div></div>
+      <div class="totals__row totals__row--highlight"><div class="totals__label">优惠价</div><div class="totals__value">${formatMoney(totalAfterDiscount)}</div></div>
     `;
     wrapper.appendChild(totals);
 
