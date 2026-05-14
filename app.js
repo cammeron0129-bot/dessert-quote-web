@@ -1416,11 +1416,13 @@ function init() {
     btnExportPdf.textContent = "生成中...";
 
     try {
-      // A4 at 96dpi (approx). We'll scale content to fit inside one page with margins.
+      // A4 at 96dpi (approx). Fit width, then paginate vertically if needed.
       const A4_W = 794;
       const A4_H = 1123;
-      const MARGIN = 48; // ~12.7mm
-      const contentW = A4_W - MARGIN * 2;
+      const MARGIN_X = 48; // left/right
+      const MARGIN_TOP = 24; // reduce top whitespace by half
+      const MARGIN_BOTTOM = 48;
+      const contentW = A4_W - MARGIN_X * 2;
 
       const node = buildExportNode(contentW);
       // Ensure latest render
@@ -1448,23 +1450,12 @@ function init() {
     <title>${exportName}</title>
     <link rel="stylesheet" href="./styles.css?v=highlight1" />
     <style>
-      @page { size: A4; margin: 12mm; }
+      @page { size: A4; margin: 0; }
       html, body { margin: 0; padding: 0; background: #fff !important; }
-      .page {
-        width: ${A4_W}px;
-        height: ${A4_H}px;
-        background: #fff;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-      .stage {
-        width: ${A4_W - MARGIN * 2}px;
-        height: ${A4_H - MARGIN * 2}px;
-        margin: ${MARGIN}px;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-      .fit {
+      .page { width: ${A4_W}px; height: ${A4_H}px; background: #fff; overflow: hidden; box-sizing: border-box; page-break-after: always; }
+      .page:last-child { page-break-after: auto; }
+      .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; }
+      .scale {
         transform-origin: top left;
       }
       /* remove shadows/rounding for print */
@@ -1473,23 +1464,27 @@ function init() {
     </style>
   </head>
   <body>
-    <div class="page">
-      <div class="stage">
-        <div id="fit" class="fit"></div>
-      </div>
-    </div>
-    <script>
-      (function() {
-        const exportName = ${JSON.stringify(exportName)};
-        document.title = exportName;
-      })();
-    </script>
+    <div id="pages"></div>
   </body>
 </html>`);
       doc.close();
 
-      const mount = doc.getElementById("fit");
-      mount.appendChild(doc.importNode(node, true));
+      const pagesEl = doc.getElementById("pages");
+      doc.title = exportName;
+
+      // Mount once for measurement
+      const measurePage = doc.createElement("div");
+      measurePage.className = "page";
+      const measureStage = doc.createElement("div");
+      measureStage.className = "stage";
+      const measureScale = doc.createElement("div");
+      measureScale.className = "scale";
+      measureStage.appendChild(measureScale);
+      measurePage.appendChild(measureStage);
+      pagesEl.appendChild(measurePage);
+
+      const imported = doc.importNode(node, true);
+      measureScale.appendChild(imported);
 
       const waitImages = () => {
         const imgs = Array.from(doc.images || []);
@@ -1507,14 +1502,37 @@ function init() {
       };
 
       await waitImages();
-      // Fit to one page
-      const stage = doc.querySelector(".stage");
+      // Fit width, then paginate height
+      const stage = measureStage;
       const rectStage = stage.getBoundingClientRect();
-      const rectContent = mount.getBoundingClientRect();
+      const rectContent = imported.getBoundingClientRect();
       const sx = rectStage.width / rectContent.width;
-      const sy = rectStage.height / rectContent.height;
-      const s = Math.min(1, sx, sy);
-      mount.style.transform = `scale(${s})`;
+      const s = Math.min(1, sx);
+      measureScale.style.transform = `scale(${s})`;
+
+      // Re-measure scaled height after applying scale
+      const stageHeight = rectStage.height;
+      const offsetStepUnscaled = stageHeight / s;
+      const totalPages = Math.max(1, Math.ceil(imported.getBoundingClientRect().height / offsetStepUnscaled));
+
+      // Clear and rebuild pages with clipped offsets
+      pagesEl.innerHTML = "";
+      for (let i = 0; i < totalPages; i += 1) {
+        const page = doc.createElement("div");
+        page.className = "page";
+        const st = doc.createElement("div");
+        st.className = "stage";
+        const sc = doc.createElement("div");
+        sc.className = "scale";
+        sc.style.transform = `scale(${s})`;
+        const clone = doc.importNode(node, true);
+        clone.style.position = "relative";
+        clone.style.top = `-${Math.floor(i * offsetStepUnscaled)}px`;
+        sc.appendChild(clone);
+        st.appendChild(sc);
+        page.appendChild(st);
+        pagesEl.appendChild(page);
+      }
 
       // Print (user chooses Save as PDF)
       setTimeout(() => {
