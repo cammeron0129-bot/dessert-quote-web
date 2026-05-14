@@ -161,6 +161,7 @@ function init() {
 
   const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
+  const btnExportPdf = el("#btnExportPdf");
   const btnScreenshot = el("#btnScreenshot");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
@@ -1393,6 +1394,121 @@ function init() {
     }
   }
 
+  async function exportPdfA4OnePage() {
+    const exportName = buildExportName();
+    const oldText = btnExportPdf.textContent;
+    btnExportPdf.disabled = true;
+    btnExportPdf.textContent = "生成中...";
+
+    try {
+      const w = window.open("about:blank", "_blank", "noopener,noreferrer");
+      if (!w) {
+        alert("浏览器拦截了新页面。请允许弹窗后重试导出 PDF。");
+        return;
+      }
+
+      // A4 at 96dpi (approx). We'll scale content to fit inside one page with margins.
+      const A4_W = 794;
+      const A4_H = 1123;
+      const MARGIN = 48; // ~12.7mm
+      const contentW = A4_W - MARGIN * 2;
+
+      const node = buildExportNode(contentW);
+      // Ensure latest render
+      // (buildExportNode uses current state)
+
+      w.document.open();
+      w.document.write(`<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${exportName}</title>
+    <link rel="stylesheet" href="./styles.css?v=highlight1" />
+    <style>
+      @page { size: A4; margin: 12mm; }
+      html, body { margin: 0; padding: 0; background: #fff !important; }
+      .page {
+        width: ${A4_W}px;
+        height: ${A4_H}px;
+        background: #fff;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .stage {
+        width: ${A4_W - MARGIN * 2}px;
+        height: ${A4_H - MARGIN * 2}px;
+        margin: ${MARGIN}px;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .fit {
+        transform-origin: top left;
+      }
+      /* remove shadows/rounding for print */
+      .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
+      .topbar, .panel--left, .resizer, .modal, .no-print { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="stage">
+        <div id="fit" class="fit"></div>
+      </div>
+    </div>
+    <script>
+      (function() {
+        const exportName = ${JSON.stringify(exportName)};
+        document.title = exportName;
+      })();
+    </script>
+  </body>
+</html>`);
+      w.document.close();
+
+      const mount = w.document.getElementById("fit");
+      mount.appendChild(w.document.importNode(node, true));
+
+      const waitImages = () => {
+        const imgs = Array.from(w.document.images || []);
+        if (imgs.length === 0) return Promise.resolve();
+        return Promise.all(
+          imgs.map((img) => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return new Promise((resolve) => {
+              const done = () => resolve();
+              img.addEventListener("load", done, { once: true });
+              img.addEventListener("error", done, { once: true });
+            });
+          })
+        );
+      };
+
+      await waitImages();
+      // Fit to one page
+      const stage = w.document.querySelector(".stage");
+      const rectStage = stage.getBoundingClientRect();
+      const rectContent = mount.getBoundingClientRect();
+      const sx = rectStage.width / rectContent.width;
+      const sy = rectStage.height / rectContent.height;
+      const s = Math.min(1, sx, sy);
+      mount.style.transform = `scale(${s})`;
+
+      // Print (user chooses Save as PDF)
+      setTimeout(() => {
+        try { w.focus(); } catch {}
+        try { w.print(); } catch {}
+      }, 250);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
+      alert(`导出 PDF 失败：${e?.message || e}`);
+    } finally {
+      btnExportPdf.disabled = false;
+      btnExportPdf.textContent = oldText;
+    }
+  }
+
   function openImageModal(src, caption) {
     modalImg.src = src;
     modalImg.alt = caption || "图片";
@@ -2008,6 +2124,7 @@ function init() {
   });
 
   btnExportCsv.addEventListener("click", exportTable);
+  btnExportPdf.addEventListener("click", exportPdfA4OnePage);
   btnScreenshot.addEventListener("click", exportScreenshotPng);
 
   btnExportImage.addEventListener("click", exportLongPng);
