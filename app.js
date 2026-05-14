@@ -1551,7 +1551,9 @@ function init() {
         if (overflow) {
           // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
           const nextStart = Math.max(overflow.top, start + EPS);
-          const heightUnscaled = Math.max(1, nextStart - start);
+          // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
+          const end = Math.max(start + 1, nextStart - 2);
+          const heightUnscaled = Math.max(1, end - start);
           segments.push({ start, heightUnscaled });
           start = nextStart;
           continue;
@@ -1573,7 +1575,7 @@ function init() {
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = `${Math.floor(seg.heightUnscaled * s)}px`;
+        st.style.height = `${Math.max(1, Math.floor(seg.heightUnscaled * s) - 2)}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
         sc.style.transform = `scale(${s})`;
