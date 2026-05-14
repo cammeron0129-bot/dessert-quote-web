@@ -1513,6 +1513,7 @@ function init() {
       const stage = measureStage;
       const rectStage = stage.getBoundingClientRect();
       const rectContent = imported.getBoundingClientRect();
+      const contentTop = rectContent.top;
       const sx = rectStage.width / rectContent.width;
       const s = Math.min(1, sx);
 
