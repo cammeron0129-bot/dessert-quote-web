@@ -1375,7 +1375,14 @@ function init() {
 
     const notes = document.createElement("div");
     notes.className = "orderNotes";
-    notes.textContent = state.meta.orderNotes || "";
+    const rawNotes = state.meta.orderNotes || "";
+    // 分行渲染，方便 PDF 分页断点对齐，避免整段被切割
+    notes.innerHTML = "";
+    for (const line of String(rawNotes).split("\n")) {
+      const div = document.createElement("div");
+      div.textContent = line;
+      notes.appendChild(div);
+    }
     foot.appendChild(notes);
 
     wrapper.appendChild(foot);
@@ -1525,6 +1532,13 @@ function init() {
         const rEl = elx.getBoundingClientRect();
         candidates.add(Math.max(0, rEl.top - contentTop));
       }
+      // 订购说明内每一行也作为分页断点，避免切割段落
+      const noteLineEls = Array.from(imported.querySelectorAll(".orderNotes *"))
+        .filter((n) => n && n.getBoundingClientRect);
+      for (const elx of noteLineEls) {
+        const rEl = elx.getBoundingClientRect();
+        candidates.add(Math.max(0, rEl.top - contentTop));
+      }
       const sorted = Array.from(candidates)
         .map((n) => Math.floor(n))
         .filter((n) => Number.isFinite(n))
@@ -1532,11 +1546,13 @@ function init() {
 
       const contentHeight = Math.ceil(rectContent.height);
       const stageHeight = rectStage.height;
-      const pageHeightUnscaled = stageHeight / s;
+      // 留一点安全空间，避免因为四舍五入/字体渲染导致底部切到一行
+      const SAFE_PAD = 16;
+      const pageHeightUnscaled = Math.max(1, (stageHeight - SAFE_PAD) / s);
 
       const starts = [];
       let start = 0;
-      const EPS = 2;
+      const EPS = 6;
       while (start < contentHeight - EPS) {
         starts.push(start);
         const max = start + pageHeightUnscaled;
@@ -1545,7 +1561,7 @@ function init() {
         for (let i = 0; i < sorted.length; i += 1) {
           const bp = sorted[i];
           if (bp <= start + EPS) continue;
-          if (bp < max - 6) next = bp;
+          if (bp < max - 24) next = bp;
           else break;
         }
         if (next <= start + EPS) next = max;
