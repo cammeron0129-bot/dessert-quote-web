@@ -345,51 +345,32 @@ function init() {
 
       // 手机端（尤其 iOS）通常无法预览/打开 .xls：改为导出可直接浏览器打开的 .html，并提供“分享保存”。
       if (isMobile) {
-        const w = window.open("about:blank", "_blank", "noopener,noreferrer");
-        if (!w) {
-          alert("被浏览器拦截打开新页面，请允许弹窗后重试导出表格。");
-        } else {
-          w.document.title = `${exportName}.html`;
-          w.document.body.style.margin = "0";
-          w.document.body.innerHTML = `
-            <div style="padding:12px; font-size:14px; color:#111827; font-family: ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei;">
-              <div style="margin-bottom:8px">表格已生成（建议：点“分享/保存”→存到文件/WPS/Excel 打开）</div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px">
-                <button id="shareBtn" style="appearance:none; border:1px solid rgba(0,0,0,.15); background:#fff; border-radius:10px; padding:10px 12px; font-size:14px">分享/保存</button>
-                <button id="openBtn" style="appearance:none; border:1px solid rgba(0,0,0,.15); background:#fff; border-radius:10px; padding:10px 12px; font-size:14px">在本页预览</button>
-              </div>
-              <div id="hint" style="color:#6b7280; margin-bottom:10px"></div>
-              <div id="preview" style="border-top:1px solid rgba(0,0,0,.08)"></div>
-            </div>
-          `;
-
-          const shareBtn = w.document.getElementById("shareBtn");
-          const openBtn = w.document.getElementById("openBtn");
-          const hint = w.document.getElementById("hint");
-          const preview = w.document.getElementById("preview");
-
-          if (shareBtn) {
-            shareBtn.addEventListener("click", async () => {
-              try {
-                if (!w.navigator?.share) {
-                  w.alert("当前浏览器不支持“分享”。可点击“在本页预览”，再用浏览器分享功能保存。");
-                  return;
-                }
-                const file = new File([html], `${exportName}.html`, { type: "text/html;charset=utf-8" });
-                await w.navigator.share({ files: [file], title: exportName });
-              } catch (e) {
-                w.alert(`分享失败：${e?.message || e}`);
-              }
-            });
+        // 1) 优先直接调用系统分享（不依赖弹窗），保存到“文件”里后用 WPS/Excel 打开
+        try {
+          if (navigator?.share) {
+            const file = new File([html], `${exportName}.html`, { type: "text/html;charset=utf-8" });
+            await navigator.share({ files: [file], title: exportName });
+            return;
           }
+        } catch {
+          // ignore, fallback below
+        }
 
-          if (openBtn) {
-            openBtn.addEventListener("click", () => {
-              if (!preview) return;
-              hint.textContent = "提示：如需用 Excel/WPS 查看，请用“分享/保存”保存为文件再打开。";
-              preview.innerHTML = html;
-            });
-          }
+        // 2) 无法分享时：同页打开 HTML（不弹窗），用户可用浏览器“分享”菜单保存/打印
+        try {
+          const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          alert("将打开表格预览页。可使用浏览器分享菜单保存到“文件”，再用 WPS/Excel 打开。返回本页面请点浏览器“返回”。");
+          window.location.assign(url);
+          setTimeout(() => {
+            try {
+              URL.revokeObjectURL(url);
+            } catch {}
+          }, 120_000);
+          return;
+        } catch (e) {
+          alert(`导出表格失败：${e?.message || e}`);
+          return;
         }
         return;
       }
