@@ -296,7 +296,9 @@ function init() {
             }
           }
           const img = src
-            ? `<img src="${src}" width="48" height="48" style="display:block;border:1px solid rgba(0,0,0,.12);background:#fff" />`
+            ? `<div style="width:48px;height:48px;overflow:hidden;margin:0 auto;">
+                 <img src="${src}" width="48" height="48" style="display:block;border:1px solid rgba(0,0,0,.12);background:#fff;mso-width-source:userset;mso-height-source:userset;" />
+               </div>`
             : "";
           return `
             <tr>
@@ -346,6 +348,7 @@ function init() {
       .meta .k{color:rgba(17,24,39,.70); font-weight:700; width:84px;}
       .num{text-align:right; white-space:nowrap; font-variant-numeric: tabular-nums;}
       .img{width:74px; text-align:center; line-height:0; padding-top:6px; padding-bottom:6px;}
+      .img div{display:block;}
       .totals{margin-top:10px; width:100%; border-collapse:collapse;}
       .totals td{border:0; padding:4px 0; font-size:13px;}
       .totals .k{color:rgba(17,24,39,.70); font-weight:800; width:84px;}
