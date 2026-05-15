@@ -1496,12 +1496,13 @@ function init() {
       .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; position: relative; z-index: 1; background: transparent; }
       .scale {
         transform-origin: top left;
+        position: relative;
       }
       /* Watermark: CSS background so it appears only when enabling browser print option “背景图形”. */
-      .page::before{
+      .stage::after{
         content:"";
         position:absolute;
-        /* extend so rotated tiling still covers page */
+        /* cover stage area */
         top:-45%;
         left:-45%;
         width:190%;
@@ -1513,7 +1514,7 @@ function init() {
         transform: rotate(-30deg);
         opacity: 0.2;
         pointer-events:none;
-        z-index: 0;
+        z-index: 10;
       }
       /* remove shadows/rounding for print */
       .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
