@@ -2599,15 +2599,13 @@ function init() {
       if (findMenuItemByName(name)) return alert("该产品名称已存在，请换一个名称（或在菜单里直接编辑数量/价格）。");
 
       const thumb = cropToThumbDataUrl();
-      if (!thumb) return alert("请先上传图片并完成裁剪。");
 
       customMenu.unshift({
         name,
         category,
         unitPrice,
         minOrder,
-        image: thumb,
-        imageThumb: thumb,
+        ...(thumb ? { image: thumb, imageThumb: thumb } : {}),
         custom: true,
       });
       saveCustomMenu();
