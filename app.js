@@ -3253,11 +3253,17 @@ function init() {
       for (const f of files) {
         if (!String(f.type || "").startsWith("image/")) continue;
         const objectUrl = URL.createObjectURL(f);
+        let guessedCategory = "";
+        try {
+          const rel = String(f.webkitRelativePath || "");
+          // "CategoryName/filename.jpg" -> CategoryName
+          if (rel.includes("/")) guessedCategory = rel.split("/")[0] || "";
+        } catch {}
         pending.push({
           id: `tmp_${Date.now()}_${Math.random().toString(16).slice(2)}`,
           fileName: f.name,
           objectUrl,
-          category: "",
+          category: guessedCategory,
           aspect: "16:9",
           thumbDataUrl: null,
           fullDataUrl: null,
