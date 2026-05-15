@@ -1533,7 +1533,7 @@ function init() {
     }
   }
 
-  async function exportPdfA4OnePage() {
+  async function exportPdfA4OnePage(opts = {}) {
     const exportName = buildExportName();
     const oldText = btnExportPdf.textContent;
     btnExportPdf.disabled = true;
@@ -1580,6 +1580,11 @@ function init() {
       const contentW = A4_W - MARGIN_X * 2;
 
       const node = buildExportNode(contentW);
+      // Optional: hide top-left logo in PDF export
+      if (!opts.showLogo) {
+        const logo = node.querySelector(".paper__logo");
+        if (logo) logo.style.display = "none";
+      }
       // Ensure latest render
       // (buildExportNode uses current state)
 
@@ -1834,6 +1839,22 @@ function init() {
     modalImg.removeAttribute("src");
     modalCaption.textContent = "";
   }
+
+  // PDF export options (logo on/off)
+  const pdfOptionsModal = el("#pdfOptionsModal");
+  const pdfOptShowLogo = el("#pdfOptShowLogo");
+  const btnPdfOptCancel = el("#btnPdfOptCancel");
+  const btnPdfOptGo = el("#btnPdfOptGo");
+
+  const openPdfOptions = () => {
+    if (!pdfOptionsModal) return exportPdfA4OnePage({ showLogo: true });
+    // default: show logo (matches current behavior)
+    if (pdfOptShowLogo) pdfOptShowLogo.checked = true;
+    pdfOptionsModal.setAttribute("aria-hidden", "false");
+  };
+  const closePdfOptions = () => {
+    pdfOptionsModal?.setAttribute("aria-hidden", "true");
+  };
 
   function menuImageForLine(line) {
     if (!line?.source?.startsWith("menu:")) return null;
@@ -2586,7 +2607,7 @@ function init() {
   });
 
   btnExportCsv.addEventListener("click", exportTable);
-  btnExportPdf.addEventListener("click", exportPdfA4OnePage);
+  btnExportPdf.addEventListener("click", openPdfOptions);
   btnScreenshot.addEventListener("click", exportScreenshotPng);
 
   btnExportImage.addEventListener("click", exportLongPng);
@@ -2598,6 +2619,17 @@ function init() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && imageModal.getAttribute("aria-hidden") === "false") closeImageModal();
+  });
+
+  // PDF options modal events
+  for (const elClose of Array.from(document.querySelectorAll("[data-close-pdfopt=\"1\"]"))) {
+    elClose.addEventListener("click", closePdfOptions);
+  }
+  btnPdfOptCancel?.addEventListener("click", closePdfOptions);
+  btnPdfOptGo?.addEventListener("click", async () => {
+    const showLogo = Boolean(pdfOptShowLogo?.checked);
+    closePdfOptions();
+    await exportPdfA4OnePage({ showLogo });
   });
 
   btnReset.addEventListener("click", () => {

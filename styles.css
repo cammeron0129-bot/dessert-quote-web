@@ -129,6 +129,11 @@ body {
   max-height: calc(100vh - 24px);
   padding: 14px 14px 12px 14px;
 }
+.modal__content--small {
+  width: min(460px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 14px 14px 12px 14px;
+}
 .modal__title { font-weight: 900; font-size: 14px; padding: 0 0 10px 0; color: #0f172a; }
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 12px; }
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

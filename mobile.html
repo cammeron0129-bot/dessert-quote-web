@@ -211,9 +211,26 @@
       </div>
     </div>
 
+    <div id="pdfOptionsModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop" data-close-pdfopt="1"></div>
+      <div class="modal__content modal__content--small" role="dialog" aria-modal="true" aria-label="导出PDF选项">
+        <button class="modal__close" type="button" data-close-pdfopt="1" aria-label="关闭">×</button>
+        <div class="modal__title">导出 PDF 选项</div>
+        <label class="checkbox">
+          <input id="pdfOptShowLogo" type="checkbox" />
+          显示左上角 Logo
+        </label>
+        <div class="muted" style="margin-top:6px">水印仍由浏览器打印预览右侧“背景图形”控制。</div>
+        <div class="modal__actions">
+          <button id="btnPdfOptCancel" class="btn btn--ghost" type="button">取消</button>
+          <button id="btnPdfOptGo" class="btn" type="button">继续导出</button>
+        </div>
+      </div>
+    </div>
+
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=custom-upload1"></script>
+    <script src="./app.js?v=pdf-logo1"></script>
   </body>
 </html>
