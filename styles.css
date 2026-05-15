@@ -122,6 +122,45 @@ body {
 .controls__row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .controls__grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 
+.btn--sm { padding: 6px 10px; border-radius: 10px; font-size: 12px; }
+
+.modal__content--form {
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 14px 14px 12px 14px;
+}
+.modal__title { font-weight: 900; font-size: 14px; padding: 0 0 10px 0; color: #0f172a; }
+.modal__actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 12px; }
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+body.mobile .formGrid { grid-template-columns: 1fr; }
+
+.cropWrap { margin-top: 10px; display: grid; gap: 8px; }
+.cropStage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: rgba(0,0,0,0.06);
+  overflow: hidden;
+  touch-action: none;
+}
+.cropStage img { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); will-change: transform; user-select: none; -webkit-user-drag: none; }
+.cropMask { position:absolute; inset:0; background: rgba(0,0,0,0.35); }
+.cropBox{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  width: 56%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 14px;
+  border: 2px solid rgba(255,255,255,0.95);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+.cropHint { font-size: 12px; }
+
 .categoryBar {
   display: flex;
   flex-wrap: wrap;

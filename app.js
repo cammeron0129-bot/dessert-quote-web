@@ -113,6 +113,17 @@ function init() {
   let state = loadState() || buildInitialState();
   let activeCategory = "全部";
 
+  const CUSTOM_MENU_STORAGE_KEY = "dangxia_custom_menu_v1";
+  const customMenu = (() => {
+    try {
+      const raw = localStorage.getItem(CUSTOM_MENU_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
   // Ensure meta keys exist
   state.meta = { ...defaultMeta(), ...(state.meta || {}) };
   state.selected = state.selected || {};
@@ -127,6 +138,7 @@ function init() {
   const onlySelected = el("#onlySelected");
   const menuCount = el("#menuCount");
   const categoryBar = el("#categoryBar");
+  const btnAddCustom = el("#btnAddCustom");
 
   const metaDate = el("#metaDate");
   const metaLocation = el("#metaLocation");
@@ -159,6 +171,107 @@ function init() {
   const modalClose = el("#modalClose");
   const modalImg = el("#modalImg");
   const modalCaption = el("#modalCaption");
+
+  // Custom item modal refs (optional)
+  const customModal = el("#customModal");
+  const customName = el("#customName");
+  const customCategory = el("#customCategory");
+  const customPrice = el("#customPrice");
+  const customFile = el("#customFile");
+  const cropWrap = el("#cropWrap");
+  const cropStage = el("#cropStage");
+  const cropImg = el("#cropImg");
+  const cropBox = el("#cropBox");
+  const btnCustomCancel = el("#btnCustomCancel");
+  const btnCustomSave = el("#btnCustomSave");
+
+  const closeCustomModal = () => customModal?.setAttribute("aria-hidden", "true");
+  const openCustomModal = () => customModal?.setAttribute("aria-hidden", "false");
+
+  const saveCustomMenu = () => {
+    try {
+      localStorage.setItem(CUSTOM_MENU_STORAGE_KEY, JSON.stringify(customMenu));
+    } catch {}
+  };
+
+  const findMenuItemByName = (name) => [...menu, ...customMenu].find((m) => m.name === name) || null;
+
+  // Crop state (square, cover)
+  const cropState = {
+    ready: false,
+    imgNaturalW: 0,
+    imgNaturalH: 0,
+    tx: 0,
+    ty: 0,
+    scale: 1,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  };
+
+  const setCropTransform = () => {
+    if (!cropImg) return;
+    cropImg.style.transform = `translate(-50%, -50%) translate(${cropState.tx}px, ${cropState.ty}px) scale(${cropState.scale})`;
+  };
+
+  const resetCropToCover = () => {
+    if (!cropStage || !cropBox || !cropImg) return;
+    const boxRect = cropBox.getBoundingClientRect();
+    const boxSize = Math.min(boxRect.width, boxRect.height);
+    const iw = cropState.imgNaturalW || 1;
+    const ih = cropState.imgNaturalH || 1;
+    cropState.scale = Math.max(boxSize / iw, boxSize / ih);
+    cropState.tx = 0;
+    cropState.ty = 0;
+    setCropTransform();
+  };
+
+  const clampCrop = () => {
+    if (!cropBox) return;
+    const boxRect = cropBox.getBoundingClientRect();
+    const boxSize = Math.min(boxRect.width, boxRect.height);
+    const iw = cropState.imgNaturalW * cropState.scale;
+    const ih = cropState.imgNaturalH * cropState.scale;
+    const halfBox = boxSize / 2;
+    const maxX = Math.max(0, iw / 2 - halfBox);
+    const maxY = Math.max(0, ih / 2 - halfBox);
+    cropState.tx = clamp(cropState.tx, -maxX, maxX);
+    cropState.ty = clamp(cropState.ty, -maxY, maxY);
+  };
+
+  const cropToThumbDataUrl = () => {
+    if (!cropStage || !cropBox || !cropImg) return null;
+    if (!cropState.ready) return null;
+
+    const stageRect = cropStage.getBoundingClientRect();
+    const boxRect = cropBox.getBoundingClientRect();
+    const boxSize = Math.min(boxRect.width, boxRect.height);
+
+    const cx = boxRect.left - stageRect.left + boxSize / 2;
+    const cy = boxRect.top - stageRect.top + boxSize / 2;
+    const stageCenterX = stageRect.width / 2;
+    const stageCenterY = stageRect.height / 2;
+
+    const iw = cropState.imgNaturalW;
+    const ih = cropState.imgNaturalH;
+    const s = cropState.scale;
+
+    const srcLeft = (cx - boxSize / 2 - stageCenterX - cropState.tx) / s + iw / 2;
+    const srcTop = (cy - boxSize / 2 - stageCenterY - cropState.ty) / s + ih / 2;
+    const srcSize = boxSize / s;
+
+    const canvas = document.createElement("canvas");
+    const outSize = 224; // 56px * 4
+    canvas.width = outSize;
+    canvas.height = outSize;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, outSize, outSize);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(cropImg, srcLeft, srcTop, srcSize, srcSize, 0, 0, outSize, outSize);
+    return canvas.toDataURL("image/jpeg", 0.88);
+  };
 
   const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
@@ -1725,12 +1838,12 @@ function init() {
   function menuImageForLine(line) {
     if (!line?.source?.startsWith("menu:")) return null;
     const name = line.source.slice("menu:".length);
-    const item = menu.find((m) => m.name === name);
+    const item = findMenuItemByName(name);
     return item?.image || null;
   }
 
   function menuThumbForName(name) {
-    const item = menu.find((m) => m.name === name);
+    const item = findMenuItemByName(name);
     return item?.imageThumb || item?.image || null;
   }
 
@@ -1793,12 +1906,13 @@ function init() {
     const selectedOnly = onlySelected.checked;
     const cat = activeCategory;
 
-    const list = menu
+    const allMenu = [...menu, ...customMenu];
+    const list = allMenu
       .filter((it) => (cat === "全部" ? true : String(it.category || "") === cat))
       .filter((it) => (q ? String(it.name).toLowerCase().includes(q) : true))
       .filter((it) => (selectedOnly ? Boolean(state.selected[it.name]) : true));
 
-    menuCount.textContent = `共 ${list.length} 项（已选 ${Object.keys(state.selected).length}）`;
+    menuCount.textContent = `共 ${list.length} 项（已选 ${Object.keys(state.selected).length}，自定义 ${customMenu.length}）`;
 
     menuList.innerHTML = "";
     for (const item of list) {
@@ -1866,6 +1980,12 @@ function init() {
       btn.type = "button";
       btn.textContent = selected ? "移除" : "加入";
 
+      const btnRemoveCustom = document.createElement("button");
+      btnRemoveCustom.className = "btn btn--ghost";
+      btnRemoveCustom.type = "button";
+      btnRemoveCustom.textContent = "删除";
+      btnRemoveCustom.style.display = item.custom ? "" : "none";
+
       const price = document.createElement("input");
       price.className = "qty";
       price.type = "number";
@@ -1893,6 +2013,19 @@ function init() {
         renderAll();
       });
 
+      btnRemoveCustom.addEventListener("click", () => {
+        if (!item.custom) return;
+        if (!confirm(`删除自定义产品：${item.name}？`)) return;
+        // remove selection and quote lines if any
+        removeSelected(item.name);
+        state.quoteLines = state.quoteLines.filter((l) => l.source !== `menu:${item.name}`);
+        const idx = customMenu.findIndex((m) => m.name === item.name);
+        if (idx >= 0) customMenu.splice(idx, 1);
+        saveCustomMenu();
+        saveState(state);
+        renderAll();
+      });
+
       qty.addEventListener("change", () => {
         const entry = state.selected[item.name];
         if (!entry) return;
@@ -1916,6 +2049,7 @@ function init() {
       actions.appendChild(priceLabel);
       actions.appendChild(price);
       actions.appendChild(btn);
+      actions.appendChild(btnRemoveCustom);
 
       const content = document.createElement("div");
       content.appendChild(top);
@@ -1932,7 +2066,7 @@ function init() {
 
   function renderCategories() {
     const categories = Array.from(
-      new Set(menu.map((m) => String(m.category || "").trim()).filter(Boolean))
+      new Set([...menu, ...customMenu].map((m) => String(m.category || "").trim()).filter(Boolean))
     ).sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));
     const all = ["全部", ...categories];
 
@@ -2233,6 +2367,133 @@ function init() {
     renderWatermarkPreview();
   }
 
+  function initCustomUpload() {
+    if (!btnAddCustom || !customModal) return;
+
+    const clearForm = () => {
+      if (customName) customName.value = "";
+      if (customCategory) customCategory.value = "";
+      if (customPrice) customPrice.value = "";
+      if (customFile) customFile.value = "";
+      if (cropWrap) cropWrap.hidden = true;
+      cropState.ready = false;
+      cropState.tx = 0;
+      cropState.ty = 0;
+      cropState.scale = 1;
+    };
+
+    btnAddCustom.addEventListener("click", () => {
+      clearForm();
+      openCustomModal();
+      try {
+        customName?.focus();
+      } catch {}
+    });
+
+    for (const elClose of Array.from(document.querySelectorAll("[data-close-custom=\"1\"]"))) {
+      elClose.addEventListener("click", closeCustomModal);
+    }
+    btnCustomCancel?.addEventListener("click", closeCustomModal);
+
+    customFile?.addEventListener("change", async () => {
+      const f = customFile.files?.[0];
+      if (!f) return;
+      if (!String(f.type || "").startsWith("image/")) {
+        alert("请选择图片文件。");
+        return;
+      }
+      const url = URL.createObjectURL(f);
+      cropImg.src = url;
+      if (cropWrap) cropWrap.hidden = false;
+
+      await new Promise((resolve) => {
+        const done = () => resolve();
+        cropImg.addEventListener("load", done, { once: true });
+        cropImg.addEventListener("error", done, { once: true });
+      });
+
+      cropState.imgNaturalW = cropImg.naturalWidth || 0;
+      cropState.imgNaturalH = cropImg.naturalHeight || 0;
+      cropState.ready = cropState.imgNaturalW > 0 && cropState.imgNaturalH > 0;
+      resetCropToCover();
+      clampCrop();
+      setCropTransform();
+
+      try {
+        URL.revokeObjectURL(url);
+      } catch {}
+    });
+
+    const onDown = (ev) => {
+      if (!cropState.ready) return;
+      cropState.dragging = true;
+      const p = ev.touches?.[0] || ev;
+      cropState.lastX = p.clientX;
+      cropState.lastY = p.clientY;
+    };
+    const onMove = (ev) => {
+      if (!cropState.dragging) return;
+      const p = ev.touches?.[0] || ev;
+      const dx = p.clientX - cropState.lastX;
+      const dy = p.clientY - cropState.lastY;
+      cropState.lastX = p.clientX;
+      cropState.lastY = p.clientY;
+      cropState.tx += dx;
+      cropState.ty += dy;
+      clampCrop();
+      setCropTransform();
+      ev.preventDefault?.();
+    };
+    const onUp = () => {
+      cropState.dragging = false;
+    };
+    cropStage?.addEventListener("mousedown", onDown);
+    cropStage?.addEventListener("touchstart", onDown, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: false });
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+
+    cropStage?.addEventListener(
+      "wheel",
+      (ev) => {
+        if (!cropState.ready) return;
+        const delta = ev.deltaY || 0;
+        const factor = delta > 0 ? 0.92 : 1.08;
+        cropState.scale = clamp(cropState.scale * factor, 0.2, 10);
+        clampCrop();
+        setCropTransform();
+        ev.preventDefault();
+      },
+      { passive: false }
+    );
+
+    btnCustomSave?.addEventListener("click", () => {
+      const name = String(customName?.value || "").trim();
+      const category = String(customCategory?.value || "").trim() || "自定义";
+      const unitPrice = toNumber(customPrice?.value || 0);
+      if (!name) return alert("请填写产品名称。");
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) return alert("请填写正确的单价。");
+      if (findMenuItemByName(name)) return alert("该产品名称已存在，请换一个名称（或在菜单里直接编辑数量/价格）。");
+
+      const thumb = cropToThumbDataUrl();
+      if (!thumb) return alert("请先上传图片并完成裁剪。");
+
+      customMenu.unshift({
+        name,
+        category,
+        unitPrice,
+        minOrder: "",
+        image: thumb,
+        imageThumb: thumb,
+        custom: true,
+      });
+      saveCustomMenu();
+      closeCustomModal();
+      renderAll();
+    });
+  }
+
   function applySidebarWidth(px) {
     const w = clamp(toNumber(px), 320, 720);
     document.documentElement.style.setProperty("--sidebarW", `${w}px`);
@@ -2381,6 +2642,7 @@ function init() {
     saveState(state);
   }
 
+  initCustomUpload();
   renderAll();
 }
 
