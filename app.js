@@ -980,7 +980,10 @@ function init() {
       // Header
       ctx.font = "18px ui-sans-serif, system-ui, -apple-system, PingFang SC, Microsoft YaHei";
       ctx.fillStyle = brand;
-      ctx.fillText("【当夏烘焙】甜品台服务 报价单", pad + 72, 30);
+      const titleText = "【当夏烘焙】甜品台服务 报价单";
+      const titleMetrics = ctx.measureText(titleText);
+      const titleX = Math.max(pad, Math.round((width - titleMetrics.width) / 2));
+      ctx.fillText(titleText, titleX, 30);
       try {
         const logo = await loadImageBitmap("./assets/brand/logo.png");
         ctx.drawImage(logo, pad, 6, 64, 48);
@@ -1247,6 +1250,10 @@ function init() {
 
     headTop.appendChild(logo);
     headTop.appendChild(title);
+    // spacer to allow title to be perfectly centered between left logo and right empty space
+    const headSpacer = document.createElement("div");
+    headSpacer.className = "paper__headSpacer";
+    headTop.appendChild(headSpacer);
 
     const meta = document.createElement("div");
     meta.className = "paper__meta";
@@ -1512,7 +1519,7 @@ function init() {
         background-size: 220px 220px;
         background-position: 0 0;
         transform: rotate(-30deg);
-        opacity: 0.05;
+        opacity: 0.1;
         pointer-events:none;
         z-index: 10;
       }
