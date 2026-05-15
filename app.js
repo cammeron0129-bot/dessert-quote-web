@@ -2096,8 +2096,8 @@ function init() {
               const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
               const segScale = clamp(sNeeded, 0.7, s);
               if (segScale < s - 0.001) {
-                segments.push({ start, heightUnscaled: Math.max(1, need), scale: segScale });
-                start = Math.max(start + 1, overflow.bottom);
+                segments.push({ start, heightUnscaled: Math.max(1, need), scale: segScale, fullHeight: true });
+                start = overflow.bottom;
                 continue;
               }
             }
@@ -2137,7 +2137,9 @@ function init() {
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * (seg.scale || s)))}px`;
+        st.style.height = seg.fullHeight
+          ? `${Math.max(1, Math.floor(stageHeight))}px`
+          : `${Math.max(1, Math.ceil(seg.heightUnscaled * (seg.scale || s)))}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
         sc.style.transform = `scale(${seg.scale || s})`;
