@@ -226,16 +226,10 @@ function init() {
   const styleModal = el("#styleModal");
   const styleFile = el("#styleFile");
   const styleBatchList = el("#styleBatchList");
-  const styleItemCategory = el("#styleItemCategory");
-  const styleAspect = el("#styleAspect");
-  const styleCropWrap = el("#styleCropWrap");
-  const styleCropStage = el("#styleCropStage");
-  const styleCropImg = el("#styleCropImg");
-  const styleCropBox = el("#styleCropBox");
-  const styleCropHandle = el("#styleCropHandle");
+  // (batch editor renders per-item controls dynamically)
   const btnStyleCancel = el("#btnStyleCancel");
-  const btnStyleApply = el("#btnStyleApply");
   const btnStyleSave = el("#btnStyleSave");
+  const btnStyleAutoCropAll = el("#btnStyleAutoCropAll");
 
   const closeStyleModal = () => styleModal?.setAttribute("aria-hidden", "true");
   const openStyleModal = () => styleModal?.setAttribute("aria-hidden", "false");
@@ -2980,15 +2974,23 @@ function init() {
       const top = document.createElement("div");
       top.className = "card__top";
       const left = document.createElement("div");
-      const name = document.createElement("div");
-      name.className = "card__name";
-      name.textContent = s.category || "未分类";
-      left.appendChild(name);
+      const nameInput = document.createElement("input");
+      nameInput.className = "input";
+      nameInput.style.padding = "8px 10px";
+      nameInput.style.borderRadius = "10px";
+      nameInput.value = s.category || "";
+      nameInput.placeholder = "分类（可编辑）";
+      nameInput.addEventListener("input", debounce(() => {
+        s.category = nameInput.value.trim();
+        saveStyleLibrary();
+        renderStylesInQuote();
+      }, 120));
+      left.appendChild(nameInput);
       top.appendChild(left);
 
       const meta = document.createElement("div");
       meta.className = "card__meta";
-      meta.innerHTML = `<span>分类：<b>${s.category || "-"}</b></span>`;
+      meta.innerHTML = `<span>比例：<b>${s.aspect || "-"}</b></span>`;
 
       const actions = document.createElement("div");
       actions.className = "card__actions";
@@ -3067,20 +3069,11 @@ function init() {
 
   function initStyleUpload() {
     if (!btnAddStyle || !styleModal) return;
-    const cropper = createCropper({
-      stageEl: styleCropStage,
-      imgEl: styleCropImg,
-      boxEl: styleCropBox,
-      handleEl: styleCropHandle,
-      aspect: 16 / 9,
-    });
 
-    const aspectMap = {
-      "16:9": 16 / 9,
-      "9:16": 9 / 16,
-      "4:3": 4 / 3,
-      "3:4": 3 / 4,
-    };
+    let pending = [];
+    let activeId = null;
+
+    const aspectMap = { "16:9": 16 / 9, "9:16": 9 / 16, "4:3": 4 / 3, "3:4": 3 / 4 };
     const aspectToDims = (key) => {
       switch (key) {
         case "9:16":
@@ -3095,48 +3088,51 @@ function init() {
       }
     };
 
-    let pending = [];
-    let activeId = null;
+    const loadImage = (src) =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(img);
+        img.src = src;
+      });
+
+    const autoCropToDataUrl = async ({ objectUrl, aspectKey, thumbW, thumbH, fullW, fullH }) => {
+      const img = await loadImage(objectUrl);
+      const iw = img.naturalWidth || img.width || 0;
+      const ih = img.naturalHeight || img.height || 0;
+      if (!iw || !ih) return { thumb: null, full: null };
+      const aspect = aspectMap[aspectKey] || 16 / 9;
+      let sw;
+      let sh;
+      if (iw / ih > aspect) {
+        sh = ih;
+        sw = ih * aspect;
+      } else {
+        sw = iw;
+        sh = iw / aspect;
+      }
+      const sx = (iw - sw) / 2;
+      const sy = (ih - sh) / 2;
+      const draw = (ow, oh) => {
+        const c = document.createElement("canvas");
+        c.width = ow;
+        c.height = oh;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, ow, oh);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ow, oh);
+        return c.toDataURL("image/jpeg", 0.9);
+      };
+      return { thumb: draw(thumbW, thumbH), full: draw(fullW, fullH) };
+    };
 
     const clearForm = () => {
       if (styleFile) styleFile.value = "";
-      if (styleBatchList) styleBatchList.innerHTML = "";
-      if (styleCropWrap) styleCropWrap.hidden = true;
-      if (styleItemCategory) styleItemCategory.value = "";
-      if (styleAspect) styleAspect.value = "16:9";
-      for (const p of pending) {
-        try {
-          if (p.objectUrl) URL.revokeObjectURL(p.objectUrl);
-        } catch {}
-      }
       pending = [];
       activeId = null;
-      cropper.clear();
-    };
-
-    const openEditorFor = async (id) => {
-      const item = pending.find((x) => x.id === id);
-      if (!item) return;
-      activeId = id;
-      if (styleCropWrap) styleCropWrap.hidden = false;
-
-      if (styleItemCategory) styleItemCategory.value = item.category || "";
-      if (styleAspect) styleAspect.value = item.aspect || "16:9";
-
-      const a = aspectMap[item.aspect || "16:9"] || 16 / 9;
-      if (styleCropStage) styleCropStage.style.aspectRatio = `${a}`;
-
-      styleCropImg.src = item.objectUrl;
-      await new Promise((resolve) => {
-        const done = () => resolve();
-        styleCropImg.addEventListener("load", done, { once: true });
-        styleCropImg.addEventListener("error", done, { once: true });
-      });
-
-      cropper.state.imgNaturalW = styleCropImg.naturalWidth || 0;
-      cropper.state.imgNaturalH = styleCropImg.naturalHeight || 0;
-      cropper.state.ready = cropper.state.imgNaturalW > 0 && cropper.state.imgNaturalH > 0;
-      cropper.setAspect(a);
+      if (styleBatchList) styleBatchList.innerHTML = "";
     };
 
     const renderPending = () => {
@@ -3167,7 +3163,6 @@ function init() {
         cat.value = item.category || "";
         cat.addEventListener("input", () => {
           item.category = cat.value;
-          if (activeId === item.id && styleItemCategory) styleItemCategory.value = item.category;
         });
 
         const sel = document.createElement("select");
@@ -3182,7 +3177,6 @@ function init() {
         sel.addEventListener("change", () => {
           item.aspect = sel.value;
           renderPending();
-          if (activeId === item.id) openEditorFor(item.id);
         });
 
         row1.appendChild(cat);
@@ -3193,8 +3187,11 @@ function init() {
         const btnEdit = document.createElement("button");
         btnEdit.className = "btn btn--ghost";
         btnEdit.type = "button";
-        btnEdit.textContent = "编辑";
-        btnEdit.addEventListener("click", () => openEditorFor(item.id));
+        btnEdit.textContent = activeId === item.id ? "收起" : "编辑";
+        btnEdit.addEventListener("click", () => {
+          activeId = activeId === item.id ? null : item.id;
+          renderPending();
+        });
 
         const btnRemove = document.createElement("button");
         btnRemove.className = "btn btn--ghost";
@@ -3209,10 +3206,7 @@ function init() {
             } catch {}
             pending.splice(idx, 1);
           }
-          if (activeId === item.id) {
-            activeId = null;
-            if (styleCropWrap) styleCropWrap.hidden = true;
-          }
+          if (activeId === item.id) activeId = null;
           renderPending();
         });
 
@@ -3229,6 +3223,59 @@ function init() {
 
         wrap.appendChild(thumb);
         wrap.appendChild(meta);
+
+        if (activeId === item.id) {
+          const editor = document.createElement("div");
+          editor.className = "batchItem__editor";
+          editor.innerHTML = `
+            <div class="cropStage">
+              <img alt="裁剪预览" />
+              <div class="cropMask" aria-hidden="true"></div>
+              <div class="cropBox" aria-hidden="true"><div class="cropHandle" aria-hidden="true"></div></div>
+            </div>
+            <div class="controls__row" style="justify-content:flex-end">
+              <button class="btn btn--ghost btn--sm" type="button" data-save-one="1">保存本张</button>
+            </div>
+          `;
+          wrap.appendChild(editor);
+
+          queueMicrotask(async () => {
+            if (activeId !== item.id) return;
+            const stageEl = editor.querySelector(".cropStage");
+            const imgEl = editor.querySelector("img");
+            const boxEl = editor.querySelector(".cropBox");
+            const handleEl = editor.querySelector(".cropHandle");
+            const btnSaveOne = editor.querySelector("button[data-save-one=\"1\"]");
+            if (!stageEl || !imgEl || !boxEl) return;
+            const aspect = aspectMap[item.aspect || "16:9"] || 16 / 9;
+            stageEl.style.aspectRatio = String(aspect);
+            const cropper = createCropper({ stageEl, imgEl, boxEl, handleEl, aspect });
+            imgEl.src = item.objectUrl;
+            await new Promise((resolve) => {
+              const done = () => resolve();
+              imgEl.addEventListener("load", done, { once: true });
+              imgEl.addEventListener("error", done, { once: true });
+            });
+            cropper.state.imgNaturalW = imgEl.naturalWidth || 0;
+            cropper.state.imgNaturalH = imgEl.naturalHeight || 0;
+            cropper.state.ready = cropper.state.imgNaturalW > 0 && cropper.state.imgNaturalH > 0;
+            cropper.setAspect(aspect);
+            btnSaveOne?.addEventListener("click", () => {
+              const category = String(item.category || "").trim();
+              if (!category) return alert("请填写分类。");
+              const dims = aspectToDims(item.aspect || "16:9");
+              const thumb2 = cropper.cropToDataUrl(dims.thumbW, dims.thumbH);
+              const full2 = cropper.cropToDataUrl(dims.fullW, dims.fullH);
+              if (!thumb2 || !full2) return alert("请先完成裁剪。");
+              item.thumbDataUrl = thumb2;
+              item.fullDataUrl = full2;
+              item.fullW = dims.fullW;
+              item.fullH = dims.fullH;
+              renderPending();
+            });
+          });
+        }
+
         styleBatchList.appendChild(wrap);
       }
     };
@@ -3248,15 +3295,12 @@ function init() {
       if (files.length === 0) return;
       pending = [];
       activeId = null;
-      if (styleCropWrap) styleCropWrap.hidden = true;
-
       for (const f of files) {
         if (!String(f.type || "").startsWith("image/")) continue;
         const objectUrl = URL.createObjectURL(f);
         let guessedCategory = "";
         try {
           const rel = String(f.webkitRelativePath || "");
-          // "CategoryName/filename.jpg" -> CategoryName
           if (rel.includes("/")) guessedCategory = rel.split("/")[0] || "";
         } catch {}
         pending.push({
@@ -3272,49 +3316,42 @@ function init() {
         });
       }
       renderPending();
-      if (pending[0]) await openEditorFor(pending[0].id);
     });
 
-    styleAspect?.addEventListener("change", () => {
-      const item = pending.find((x) => x.id === activeId);
-      if (!item) return;
-      item.aspect = styleAspect.value;
-      const a = aspectMap[item.aspect] || 16 / 9;
-      cropper.setAspect(a);
-      if (styleCropStage) styleCropStage.style.aspectRatio = `${a}`;
-      renderPending();
-    });
+    btnStyleAutoCropAll?.addEventListener("click", async () => {
+      if (!pending.length) return alert("请先选择图片。");
+      const missing = pending.find((x) => !String(x.category || "").trim());
+      if (missing) return alert("请先为每张图片填写分类（可在列表中直接输入）。");
 
-    styleItemCategory?.addEventListener("input", () => {
-      const item = pending.find((x) => x.id === activeId);
-      if (!item) return;
-      item.category = styleItemCategory.value;
-      renderPending();
-    });
-
-    btnStyleApply?.addEventListener("click", () => {
-      const item = pending.find((x) => x.id === activeId);
-      if (!item) return alert("请先在列表里选择一张图片编辑。");
-      const category = String(item.category || "").trim();
-      if (!category) return alert("请填写分类。");
-      const dims = aspectToDims(item.aspect || "16:9");
-      const thumb = cropper.cropToDataUrl(dims.thumbW, dims.thumbH);
-      const full = cropper.cropToDataUrl(dims.fullW, dims.fullH);
-      if (!thumb || !full) return alert("请先完成裁剪。");
-      item.thumbDataUrl = thumb;
-      item.fullDataUrl = full;
-      item.fullW = dims.fullW;
-      item.fullH = dims.fullH;
-      renderPending();
+      btnStyleAutoCropAll.disabled = true;
+      const old = btnStyleAutoCropAll.textContent;
+      btnStyleAutoCropAll.textContent = "裁剪中...";
+      try {
+        for (const item of pending) {
+          if (item.fullDataUrl) continue;
+          const dims = aspectToDims(item.aspect || "16:9");
+          const { thumb, full } = await autoCropToDataUrl({
+            objectUrl: item.objectUrl,
+            aspectKey: item.aspect || "16:9",
+            ...dims,
+          });
+          item.thumbDataUrl = thumb;
+          item.fullDataUrl = full;
+          item.fullW = dims.fullW;
+          item.fullH = dims.fullH;
+          renderPending();
+          await new Promise((r) => setTimeout(r, 10));
+        }
+      } finally {
+        btnStyleAutoCropAll.disabled = false;
+        btnStyleAutoCropAll.textContent = old;
+      }
     });
 
     btnStyleSave?.addEventListener("click", () => {
       if (!pending.length) return alert("请先选择图片。");
-
       const ready = pending.filter((x) => String(x.category || "").trim() && x.thumbDataUrl && x.fullDataUrl);
-      if (ready.length !== pending.length) {
-        return alert("请先为每张图片填写分类并点击“保存本张”（状态变为已裁剪），再确认上传。");
-      }
+      if (ready.length !== pending.length) return alert("请先完成裁剪（可逐张编辑保存，或点“一键裁剪全部”）。");
 
       for (const x of ready.reverse()) {
         const id = `st_${Date.now()}_${Math.random().toString(16).slice(2)}`;

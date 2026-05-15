@@ -261,38 +261,16 @@
             </label>
           </div>
 
+          <div class="controls__row" style="justify-content:flex-end">
+            <button id="btnStyleAutoCropAll" class="btn btn--ghost btn--sm" type="button">一键裁剪全部</button>
+          </div>
           <div id="styleBatchList" class="batchList"></div>
 
-          <div class="cropWrap" id="styleCropWrap" hidden>
-            <div class="formGrid">
-              <label class="field">
-                <div class="field__label">分类</div>
-                <input id="styleItemCategory" class="input" type="text" placeholder="例如：中秋国庆 / 生日 / 森系" />
-              </label>
-              <label class="field">
-                <div class="field__label">比例</div>
-                <select id="styleAspect" class="input">
-                  <option value="4:3">4:3（横）</option>
-                  <option value="3:4">3:4（竖）</option>
-                  <option value="16:9" selected>16:9（横）</option>
-                  <option value="9:16">9:16（竖）</option>
-                </select>
-              </label>
-            </div>
-            <div class="cropStage" id="styleCropStage">
-              <img id="styleCropImg" alt="裁剪预览" />
-              <div class="cropMask" aria-hidden="true"></div>
-              <div class="cropBox" id="styleCropBox" aria-hidden="true">
-                <div class="cropHandle" id="styleCropHandle" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="cropHint muted">支持 4:3、3:4、16:9、9:16。点击列表里的“编辑”逐张裁剪。</div>
-          </div>
+          <div class="muted" style="margin-top:6px">每张图片可填写分类、选择比例；点“编辑”会在该图片下方展开裁剪区。</div>
         </div>
 
         <div class="modal__actions">
           <button id="btnStyleCancel" class="btn btn--ghost" type="button">取消</button>
-          <button id="btnStyleApply" class="btn btn--ghost" type="button">保存本张</button>
           <button id="btnStyleSave" class="btn" type="button">确认上传（全部）</button>
         </div>
       </div>
@@ -301,6 +279,6 @@
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=style-batch2"></script>
+    <script src="./app.js?v=style-batch3"></script>
   </body>
 </html>
