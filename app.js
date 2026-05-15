@@ -1816,6 +1816,7 @@ function init() {
       for (const s of selected) {
         const item = document.createElement("div");
         item.className = "quoteStyles__item";
+        item.dataset.styleId = String(s.id || "");
         const fullSrc = s.imageFull || s.image;
         if (fullSrc) {
           const img = document.createElement("img");
@@ -2057,7 +2058,9 @@ function init() {
         const rEl = el.getBoundingClientRect();
         const top = Math.max(0, rEl.top - contentTop);
         const bottom = Math.max(0, rEl.bottom - contentTop);
-        if (Number.isFinite(top) && Number.isFinite(bottom) && bottom > top + 1) blocks.push({ top, bottom, kind });
+        if (!Number.isFinite(top) || !Number.isFinite(bottom) || !(bottom > top + 1)) return;
+        const id = kind === "style" ? String(el?.dataset?.styleId || "") : "";
+        blocks.push({ top, bottom, kind, id });
       };
 
       for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr, "row");
@@ -2078,56 +2081,74 @@ function init() {
       })();
 
       const segments = [];
-      let start = 0;
+      // Shrinking a style card changes layout height for everything below it.
+      // Only 摆台风格 can shrink; other blocks keep the original pagination logic.
+      const shrinkEvents = []; // { bottomOriginal, delta }
+      const deltaBefore = (yOriginal) => {
+        let d = 0;
+        for (const ev of shrinkEvents) {
+          if (ev.bottomOriginal <= yOriginal + 0.5) d += ev.delta;
+        }
+        return d;
+      };
+      const toVirtual = (yOriginal) => yOriginal - deltaBefore(yOriginal);
+
+      let startV = 0;
       const EPS = 6;
-      while (start < effectiveContentHeight - EPS) {
-        const max = start + pageHeightUnscaled;
+      while (startV < toVirtual(effectiveContentHeight) - EPS) {
+        const maxV = startV + pageHeightUnscaled;
         // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
-        const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
+        const overflow = blocks.find((b) => {
+          const topV = toVirtual(b.top);
+          const bottomV = toVirtual(b.bottom);
+          return topV > startV + EPS && topV < maxV && bottomV > maxV;
+        });
 
         if (overflow) {
           if (overflow.kind === "style") {
-            const blockH = Math.max(1, overflow.bottom - overflow.top);
-            const cut = overflow.bottom - max; // how much would be cut off
+            const topV = toVirtual(overflow.top);
+            const bottomV = toVirtual(overflow.bottom);
+            const blockH = Math.max(1, bottomV - topV);
+            const cut = bottomV - maxV; // how much would be cut off (virtual)
             const cutRatio = cut / blockH;
-            // If cut is small (<=20%), shrink ONLY THIS PAGE slightly so the whole style block fits.
+            // If cut is small (<=20%), shrink ONLY THIS STYLE BLOCK so it fully fits in this page.
             if (cutRatio <= 0.2) {
-              const need = overflow.bottom - start + 2; // include tiny safety
-              const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
-              const segScale = clamp(sNeeded, 0.7, s);
-              if (segScale < s - 0.001) {
-                // Important: even though we keep a full-height stage (to prevent visual cut),
-                // we should NOT render beyond the style block bottom, otherwise next page will
-                // start at overflow.bottom and the next block can appear clipped/duplicated.
-                const maxUnscaledVisible = Math.max(1, stageHeight / segScale);
-                const heightUnscaled = Math.min(Math.max(1, need), maxUnscaledVisible);
-                segments.push({ start, heightUnscaled, scale: segScale, fullHeight: true });
-                start = overflow.bottom;
-                continue;
-              }
+              const avail = Math.max(1, maxV - topV);
+              const styleScale = clamp(avail / blockH, 0.7, 1);
+              const delta = Math.max(0, blockH * (1 - styleScale));
+              // Apply shrink and keep the whole style card on this page.
+              // Next page should start after the card (virtual bottom after shrink == maxV).
+              shrinkEvents.push({ bottomOriginal: overflow.bottom, delta, id: overflow.id, scale: styleScale });
+              segments.push({
+                startV,
+                heightUnscaled: pageHeightUnscaled,
+                scale: s,
+              });
+              startV = maxV;
+              continue;
             }
             // cut would be large: move the whole block to next page
           }
           // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
-          const nextStart = Math.max(overflow.top, start + EPS);
+          const nextStartV = Math.max(toVirtual(overflow.top), startV + EPS);
           // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
-          const end = Math.max(start + 1, nextStart - 2);
-          const heightUnscaled = Math.max(1, end - start);
-          segments.push({ start, heightUnscaled, scale: s });
-          start = nextStart;
+          const endV = Math.max(startV + 1, nextStartV - 2);
+          const heightUnscaled = Math.max(1, endV - startV);
+          segments.push({ startV, heightUnscaled, scale: s });
+          startV = nextStartV;
           continue;
         }
 
         // 没有切割：正常推进一页
-        const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
-        segments.push({ start, heightUnscaled, scale: s });
-        start = start + pageHeightUnscaled;
+        const heightUnscaled = Math.min(pageHeightUnscaled, toVirtual(effectiveContentHeight) - startV);
+        segments.push({ startV, heightUnscaled, scale: s });
+        startV = startV + pageHeightUnscaled;
       }
       // Remove trailing zero-content segments (can happen due to rounding)
       while (segments.length > 1) {
         const last = segments[segments.length - 1];
         if (!last) break;
-        if ((last.start || 0) >= effectiveContentHeight - EPS) segments.pop();
+        if ((last.startV || 0) >= toVirtual(effectiveContentHeight) - EPS) segments.pop();
         else break;
       }
       const totalPages = Math.max(1, segments.length);
@@ -2135,22 +2156,49 @@ function init() {
       // Clear and rebuild pages with clipped offsets
       pagesEl.innerHTML = "";
       for (let i = 0; i < totalPages; i += 1) {
-        const seg = segments[i] || { start: 0, heightUnscaled: pageHeightUnscaled, scale: s };
+        const seg = segments[i] || { startV: 0, heightUnscaled: pageHeightUnscaled, scale: s };
         const page = doc.createElement("div");
         page.className = "page";
         page.style.position = "relative";
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = seg.fullHeight
-          ? `${Math.max(1, Math.floor(stageHeight))}px`
-          : `${Math.max(1, Math.ceil(seg.heightUnscaled * (seg.scale || s)))}px`;
+        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * (seg.scale || s)))}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
         sc.style.transform = `scale(${seg.scale || s})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
-        clone.style.top = `-${Math.floor(seg.start || 0)}px`;
+        const escapeAttr = (val) => {
+          try {
+            if (globalThis.CSS && typeof globalThis.CSS.escape === "function") return globalThis.CSS.escape(String(val));
+          } catch {}
+          return String(val).replace(/["\\\\]/g, "\\\\$&");
+        };
+
+        // Apply ALL style shrinks to the clone, because zoom changes layout for everything below,
+        // even when the shrunk card is outside the clipped region.
+        for (const ev of shrinkEvents) {
+          if (!ev?.id || !ev?.scale) continue;
+          const el = clone.querySelector(`[data-style-id="${escapeAttr(ev.id)}"]`);
+          if (el) el.style.zoom = String(ev.scale);
+        }
+
+        // Convert virtual offset back to original offset.
+        // The mapping is monotonic; a few iterations are enough.
+        const fromVirtual = (yV) => {
+          let yO = yV;
+          for (let k = 0; k < 12; k += 1) {
+            const mapped = yO - deltaBefore(yO);
+            const err = mapped - yV;
+            if (Math.abs(err) < 0.5) break;
+            yO = yO - err;
+            if (yO < 0) yO = 0;
+          }
+          return yO;
+        };
+        const startOriginal = fromVirtual(seg.startV || 0);
+        clone.style.top = `-${Math.floor(startOriginal)}px`;
         sc.appendChild(clone);
         st.appendChild(sc);
         page.appendChild(st);
