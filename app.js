@@ -1809,10 +1809,11 @@ function init() {
       for (const s of selected) {
         const item = document.createElement("div");
         item.className = "quoteStyles__item";
-        if (s.image) {
+        const fullSrc = s.imageFull || s.image;
+        if (fullSrc) {
           const img = document.createElement("img");
           img.className = "quoteStyles__img";
-          img.src = s.image;
+          img.src = fullSrc;
           img.alt = s.category || "摆台风格";
           item.appendChild(img);
         }
@@ -3011,15 +3012,16 @@ function init() {
     for (const s of selected) {
       const wrap = document.createElement("div");
       wrap.className = "quoteStyles__item";
-      if (s.image) {
+      const fullSrc = s.imageFull || s.image;
+      if (fullSrc) {
         const img = document.createElement("img");
         img.className = "quoteStyles__img";
-        img.src = s.image;
+        img.src = fullSrc;
         img.alt = s.category || "摆台风格";
         img.loading = "lazy";
         img.decoding = "async";
         img.fetchPriority = "low";
-        img.addEventListener("click", () => openImageModal(s.image, s.category || "摆台风格"));
+        img.addEventListener("click", () => openImageModal(fullSrc, s.category || "摆台风格"));
         wrap.appendChild(img);
       }
       const cap = document.createElement("div");
@@ -3089,10 +3091,11 @@ function init() {
     btnStyleSave?.addEventListener("click", () => {
       const category = String(styleCategory?.value || "").trim();
       if (!category) return alert("请填写分类。");
-      const thumb = cropper.cropToDataUrl(480, 270);
-      if (!thumb) return alert("请上传图片并完成裁剪。");
+      const thumb = cropper.cropToDataUrl(480, 270); // list thumb
+      const full = cropper.cropToDataUrl(1600, 900); // quote / export
+      if (!thumb || !full) return alert("请上传图片并完成裁剪。");
       const id = `st_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-      styleLibrary.unshift({ id, category, image: thumb, imageThumb: thumb });
+      styleLibrary.unshift({ id, category, image: thumb, imageThumb: thumb, imageFull: full });
       saveStyleLibrary();
       closeStyleModal();
       renderAll();
