@@ -162,9 +162,23 @@ body.mobile .formGrid { grid-template-columns: 1fr; }
   border-radius: 14px;
   border: 2px solid rgba(255,255,255,0.95);
   box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: move;
 }
 .cropHint { font-size: 12px; }
+
+.cropHandle{
+  position:absolute;
+  width: 14px;
+  height: 14px;
+  right: -7px;
+  bottom: -7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(15, 23, 42, 0.25);
+  cursor: nwse-resize;
+}
 
 .categoryBar {
   display: flex;

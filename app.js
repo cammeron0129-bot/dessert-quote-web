@@ -177,11 +177,14 @@ function init() {
   const customName = el("#customName");
   const customCategory = el("#customCategory");
   const customPrice = el("#customPrice");
+  const customMinOrder = el("#customMinOrder");
   const customFile = el("#customFile");
+  const customCategoryList = el("#customCategoryList");
   const cropWrap = el("#cropWrap");
   const cropStage = el("#cropStage");
   const cropImg = el("#cropImg");
   const cropBox = el("#cropBox");
+  const cropHandle = el("#cropHandle");
   const btnCustomCancel = el("#btnCustomCancel");
   const btnCustomSave = el("#btnCustomSave");
 
@@ -207,6 +210,28 @@ function init() {
     dragging: false,
     lastX: 0,
     lastY: 0,
+    boxSize: 0,
+    boxCx: 0,
+    boxCy: 0,
+    boxDragging: false,
+    boxResizing: false,
+  };
+
+  const applyCropBoxLayout = () => {
+    if (!cropStage || !cropBox) return;
+    const stageRect = cropStage.getBoundingClientRect();
+    const minSize = 80;
+    const maxSize = Math.min(stageRect.width, stageRect.height);
+    const size = clamp(cropState.boxSize || Math.floor(maxSize * 0.56), minSize, maxSize);
+    cropState.boxSize = size;
+    const half = size / 2;
+    cropState.boxCx = clamp(cropState.boxCx || stageRect.width / 2, half, stageRect.width - half);
+    cropState.boxCy = clamp(cropState.boxCy || stageRect.height / 2, half, stageRect.height - half);
+    cropBox.style.width = `${size}px`;
+    cropBox.style.height = `${size}px`;
+    cropBox.style.left = `${cropState.boxCx}px`;
+    cropBox.style.top = `${cropState.boxCy}px`;
+    cropBox.style.transform = "translate(-50%, -50%)";
   };
 
   const setCropTransform = () => {
@@ -216,8 +241,8 @@ function init() {
 
   const resetCropToCover = () => {
     if (!cropStage || !cropBox || !cropImg) return;
-    const boxRect = cropBox.getBoundingClientRect();
-    const boxSize = Math.min(boxRect.width, boxRect.height);
+    applyCropBoxLayout();
+    const boxSize = cropState.boxSize || Math.min(cropBox.getBoundingClientRect().width, cropBox.getBoundingClientRect().height);
     const iw = cropState.imgNaturalW || 1;
     const ih = cropState.imgNaturalH || 1;
     cropState.scale = Math.max(boxSize / iw, boxSize / ih);
@@ -228,8 +253,7 @@ function init() {
 
   const clampCrop = () => {
     if (!cropBox) return;
-    const boxRect = cropBox.getBoundingClientRect();
-    const boxSize = Math.min(boxRect.width, boxRect.height);
+    const boxSize = cropState.boxSize || Math.min(cropBox.getBoundingClientRect().width, cropBox.getBoundingClientRect().height);
     const iw = cropState.imgNaturalW * cropState.scale;
     const ih = cropState.imgNaturalH * cropState.scale;
     const halfBox = boxSize / 2;
@@ -244,11 +268,9 @@ function init() {
     if (!cropState.ready) return null;
 
     const stageRect = cropStage.getBoundingClientRect();
-    const boxRect = cropBox.getBoundingClientRect();
-    const boxSize = Math.min(boxRect.width, boxRect.height);
-
-    const cx = boxRect.left - stageRect.left + boxSize / 2;
-    const cy = boxRect.top - stageRect.top + boxSize / 2;
+    const boxSize = cropState.boxSize || Math.min(cropBox.getBoundingClientRect().width, cropBox.getBoundingClientRect().height);
+    const cx = cropState.boxCx || stageRect.width / 2;
+    const cy = cropState.boxCy || stageRect.height / 2;
     const stageCenterX = stageRect.width / 2;
     const stageCenterY = stageRect.height / 2;
 
@@ -2395,16 +2417,32 @@ function init() {
       if (customName) customName.value = "";
       if (customCategory) customCategory.value = "";
       if (customPrice) customPrice.value = "";
+      if (customMinOrder) customMinOrder.value = "";
       if (customFile) customFile.value = "";
       if (cropWrap) cropWrap.hidden = true;
       cropState.ready = false;
       cropState.tx = 0;
       cropState.ty = 0;
       cropState.scale = 1;
+      cropState.boxSize = 0;
+      cropState.boxCx = 0;
+      cropState.boxCy = 0;
     };
 
     btnAddCustom.addEventListener("click", () => {
       clearForm();
+      // populate category dropdown from existing categories
+      if (customCategoryList) {
+        const cats = Array.from(
+          new Set([...menu, ...customMenu].map((m) => String(m.category || "").trim()).filter(Boolean))
+        ).sort((a, b) => a.localeCompare(b, "zh-Hans-CN"));
+        customCategoryList.innerHTML = "";
+        for (const c of cats) {
+          const opt = document.createElement("option");
+          opt.value = c;
+          customCategoryList.appendChild(opt);
+        }
+      }
       openCustomModal();
       try {
         customName?.focus();
@@ -2436,6 +2474,7 @@ function init() {
       cropState.imgNaturalW = cropImg.naturalWidth || 0;
       cropState.imgNaturalH = cropImg.naturalHeight || 0;
       cropState.ready = cropState.imgNaturalW > 0 && cropState.imgNaturalH > 0;
+      applyCropBoxLayout();
       resetCropToCover();
       clampCrop();
       setCropTransform();
@@ -2489,10 +2528,72 @@ function init() {
       { passive: false }
     );
 
+    // Manual crop box: drag to move, handle to resize
+    const boxDown = (ev) => {
+      if (!cropState.ready) return;
+      cropState.boxDragging = true;
+      const p = ev.touches?.[0] || ev;
+      cropState.lastX = p.clientX;
+      cropState.lastY = p.clientY;
+      ev.preventDefault?.();
+      ev.stopPropagation?.();
+    };
+    cropBox?.addEventListener("mousedown", boxDown);
+    cropBox?.addEventListener("touchstart", boxDown, { passive: false });
+
+    const handleDown = (ev) => {
+      if (!cropState.ready) return;
+      cropState.boxResizing = true;
+      const p = ev.touches?.[0] || ev;
+      cropState.lastX = p.clientX;
+      cropState.lastY = p.clientY;
+      ev.preventDefault?.();
+      ev.stopPropagation?.();
+    };
+    cropHandle?.addEventListener("mousedown", handleDown);
+    cropHandle?.addEventListener("touchstart", handleDown, { passive: false });
+
+    const onBoxMove = (ev) => {
+      if (!cropState.boxDragging && !cropState.boxResizing) return;
+      const p = ev.touches?.[0] || ev;
+      const dx = p.clientX - cropState.lastX;
+      const dy = p.clientY - cropState.lastY;
+      cropState.lastX = p.clientX;
+      cropState.lastY = p.clientY;
+
+      if (cropState.boxDragging) {
+        cropState.boxCx += dx;
+        cropState.boxCy += dy;
+        applyCropBoxLayout();
+        clampCrop();
+        setCropTransform();
+      } else if (cropState.boxResizing) {
+        const d = (dx + dy) / 2;
+        cropState.boxSize = (cropState.boxSize || 0) + d * 2;
+        applyCropBoxLayout();
+        const iw = cropState.imgNaturalW || 1;
+        const ih = cropState.imgNaturalH || 1;
+        const minScale = Math.max(cropState.boxSize / iw, cropState.boxSize / ih);
+        if (cropState.scale < minScale) cropState.scale = minScale;
+        clampCrop();
+        setCropTransform();
+      }
+      ev.preventDefault?.();
+    };
+    const onBoxUp = () => {
+      cropState.boxDragging = false;
+      cropState.boxResizing = false;
+    };
+    window.addEventListener("mousemove", onBoxMove, { passive: false });
+    window.addEventListener("touchmove", onBoxMove, { passive: false });
+    window.addEventListener("mouseup", onBoxUp);
+    window.addEventListener("touchend", onBoxUp);
+
     btnCustomSave?.addEventListener("click", () => {
       const name = String(customName?.value || "").trim();
       const category = String(customCategory?.value || "").trim() || "自定义";
       const unitPrice = toNumber(customPrice?.value || 0);
+      const minOrder = String(customMinOrder?.value || "").trim();
       if (!name) return alert("请填写产品名称。");
       if (!Number.isFinite(unitPrice) || unitPrice < 0) return alert("请填写正确的单价。");
       if (findMenuItemByName(name)) return alert("该产品名称已存在，请换一个名称（或在菜单里直接编辑数量/价格）。");
@@ -2504,7 +2605,7 @@ function init() {
         name,
         category,
         unitPrice,
-        minOrder: "",
+        minOrder,
         image: thumb,
         imageThumb: thumb,
         custom: true,
