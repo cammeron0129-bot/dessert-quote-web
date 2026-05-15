@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>当夏｜菜单选择 → 自动报价单（手机版）</title>
-    <link rel="stylesheet" href="./styles.css?v=watermark1" />
+    <link rel="stylesheet" href="./styles.css?v=watermark2" />
   </head>
   <body class="mobile">
     <header class="topbar">
@@ -15,10 +15,6 @@
       <div class="topbar__actions">
         <button id="btnReset" class="btn btn--ghost" type="button">清空</button>
         <button id="btnExportCsv" class="btn btn--ghost" type="button">导出表格</button>
-        <label class="checkbox checkbox--inline">
-          <input id="pdfWatermark" type="checkbox" />
-          PDF水印
-        </label>
         <button id="btnExportPdf" class="btn btn--ghost" type="button">导出PDF</button>
         <button id="btnScreenshot" class="btn btn--ghost" type="button">截图导出</button>
         <button id="btnExportImage" class="btn" type="button">导出长图</button>
@@ -92,6 +88,13 @@
                 <input id="metaNote" class="input" type="text" placeholder="例如：不含税 / 需提前一周预定" />
               </label>
               <label class="field">
+                <div class="field__label">导出PDF</div>
+                <label class="checkbox checkbox--option">
+                  <input id="pdfWatermark" type="checkbox" />
+                  添加水印
+                </label>
+              </label>
+              <label class="field">
                 <div class="field__label">订购说明（可选）</div>
                 <textarea id="metaOrderNotes" class="input input--textarea" rows="5" placeholder="每行一条，例如：&#10;1. 甜品台为预约项目，建议提前预定档期。&#10;2. 动物奶油易融，空调环境建议摆放 2–3 小时。"></textarea>
               </label>
@@ -110,6 +113,7 @@
 
       <section class="panel panel--right">
         <div id="quotePaper" class="paper">
+          <div id="quoteWatermarkPreview" class="paper__watermark" aria-hidden="true"></div>
           <div class="paper__head">
             <div class="paper__headTop">
               <img class="paper__logo" src="./assets/brand/logo.png" alt="当夏烘焙" />
@@ -176,6 +180,6 @@
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=watermark1"></script>
+    <script src="./app.js?v=watermark2"></script>
   </body>
 </html>

@@ -161,15 +161,7 @@ body {
 .input--textarea { resize: vertical; }
 
 .checkbox { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
-.checkbox--inline {
-  height: 38px;
-  padding: 0 10px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.38);
-  color: var(--text);
-  white-space: nowrap;
-}
+.checkbox--option { min-height: 40px; color: var(--text); }
 .muted { color: var(--muted); font-size: 12px; }
 
 .list {
@@ -298,6 +290,33 @@ body {
   padding: 18px;
   min-height: calc(100vh - 120px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  position: relative;
+}
+.paper__watermark {
+  display: none;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+.paper--watermark .paper__watermark { display: block; }
+.paper__wm {
+  background: url("./assets/brand/watermark.png") center / contain no-repeat;
+  height: 118px;
+  opacity: 0.2;
+  position: absolute;
+  transform: rotate(-35deg);
+  transform-origin: center;
+  width: 158px;
+}
+.paper__head,
+.table,
+.totals,
+.paper__foot {
+  position: relative;
+  z-index: 1;
 }
 .paper__title {
   font-size: 18px;
