@@ -224,14 +224,17 @@ function init() {
 
   // Style upload modal refs (optional)
   const styleModal = el("#styleModal");
-  const styleCategory = el("#styleCategory");
   const styleFile = el("#styleFile");
+  const styleBatchList = el("#styleBatchList");
+  const styleItemCategory = el("#styleItemCategory");
+  const styleAspect = el("#styleAspect");
   const styleCropWrap = el("#styleCropWrap");
   const styleCropStage = el("#styleCropStage");
   const styleCropImg = el("#styleCropImg");
   const styleCropBox = el("#styleCropBox");
   const styleCropHandle = el("#styleCropHandle");
   const btnStyleCancel = el("#btnStyleCancel");
+  const btnStyleApply = el("#btnStyleApply");
   const btnStyleSave = el("#btnStyleSave");
 
   const closeStyleModal = () => styleModal?.setAttribute("aria-hidden", "true");
@@ -487,6 +490,16 @@ function init() {
       resetToCover,
       clampImgToCoverBox,
       cropToDataUrl,
+      setAspect: (nextAspect) => {
+        const a = Number(nextAspect);
+        if (!Number.isFinite(a) || a <= 0) return;
+        st.aspect = a;
+        // Re-layout box and ensure image still covers it.
+        applyBoxLayout();
+        resetToCover();
+        clampImgToCoverBox();
+        setImgTransform();
+      },
       clear,
     };
   };
@@ -3062,34 +3075,58 @@ function init() {
       aspect: 16 / 9,
     });
 
+    const aspectMap = {
+      "16:9": 16 / 9,
+      "9:16": 9 / 16,
+      "4:3": 4 / 3,
+      "3:4": 3 / 4,
+    };
+    const aspectToDims = (key) => {
+      switch (key) {
+        case "9:16":
+          return { thumbW: 270, thumbH: 480, fullW: 900, fullH: 1600 };
+        case "4:3":
+          return { thumbW: 480, thumbH: 360, fullW: 1600, fullH: 1200 };
+        case "3:4":
+          return { thumbW: 360, thumbH: 480, fullW: 1200, fullH: 1600 };
+        case "16:9":
+        default:
+          return { thumbW: 480, thumbH: 270, fullW: 1600, fullH: 900 };
+      }
+    };
+
+    let pending = [];
+    let activeId = null;
+
     const clearForm = () => {
-      if (styleCategory) styleCategory.value = "";
       if (styleFile) styleFile.value = "";
+      if (styleBatchList) styleBatchList.innerHTML = "";
       if (styleCropWrap) styleCropWrap.hidden = true;
+      if (styleItemCategory) styleItemCategory.value = "";
+      if (styleAspect) styleAspect.value = "16:9";
+      for (const p of pending) {
+        try {
+          if (p.objectUrl) URL.revokeObjectURL(p.objectUrl);
+        } catch {}
+      }
+      pending = [];
+      activeId = null;
       cropper.clear();
     };
 
-    btnAddStyle.addEventListener("click", () => {
-      clearForm();
-      openStyleModal();
-      try {
-        styleCategory?.focus();
-      } catch {}
-    });
-
-    for (const elClose of Array.from(document.querySelectorAll("[data-close-style=\"1\"]"))) {
-      elClose.addEventListener("click", closeStyleModal);
-    }
-    btnStyleCancel?.addEventListener("click", closeStyleModal);
-
-    styleFile?.addEventListener("change", async () => {
-      const f = styleFile.files?.[0];
-      if (!f) return;
-      if (!String(f.type || "").startsWith("image/")) return alert("请选择图片文件。");
-      const url = URL.createObjectURL(f);
-      styleCropImg.src = url;
+    const openEditorFor = async (id) => {
+      const item = pending.find((x) => x.id === id);
+      if (!item) return;
+      activeId = id;
       if (styleCropWrap) styleCropWrap.hidden = false;
 
+      if (styleItemCategory) styleItemCategory.value = item.category || "";
+      if (styleAspect) styleAspect.value = item.aspect || "16:9";
+
+      const a = aspectMap[item.aspect || "16:9"] || 16 / 9;
+      if (styleCropStage) styleCropStage.style.aspectRatio = `${a}`;
+
+      styleCropImg.src = item.objectUrl;
       await new Promise((resolve) => {
         const done = () => resolve();
         styleCropImg.addEventListener("load", done, { once: true });
@@ -3099,23 +3136,193 @@ function init() {
       cropper.state.imgNaturalW = styleCropImg.naturalWidth || 0;
       cropper.state.imgNaturalH = styleCropImg.naturalHeight || 0;
       cropper.state.ready = cropper.state.imgNaturalW > 0 && cropper.state.imgNaturalH > 0;
-      cropper.applyBoxLayout();
-      cropper.resetToCover();
-      cropper.clampImgToCoverBox();
-      cropper.setImgTransform();
-      try {
-        URL.revokeObjectURL(url);
-      } catch {}
+      cropper.setAspect(a);
+    };
+
+    const renderPending = () => {
+      if (!styleBatchList) return;
+      styleBatchList.innerHTML = "";
+      for (const item of pending) {
+        const wrap = document.createElement("div");
+        wrap.className = "batchItem";
+
+        const thumb = document.createElement("div");
+        thumb.className = "batchItem__thumb";
+        const a = aspectMap[item.aspect || "16:9"] || 16 / 9;
+        thumb.style.aspectRatio = String(a);
+        const img = document.createElement("img");
+        img.alt = item.fileName || "图片";
+        img.src = item.thumbDataUrl || item.objectUrl;
+        thumb.appendChild(img);
+
+        const meta = document.createElement("div");
+        meta.className = "batchItem__meta";
+
+        const row1 = document.createElement("div");
+        row1.className = "batchItem__row";
+        const cat = document.createElement("input");
+        cat.className = "input";
+        cat.type = "text";
+        cat.placeholder = "分类（必填）";
+        cat.value = item.category || "";
+        cat.addEventListener("input", () => {
+          item.category = cat.value;
+          if (activeId === item.id && styleItemCategory) styleItemCategory.value = item.category;
+        });
+
+        const sel = document.createElement("select");
+        sel.className = "input";
+        sel.innerHTML = `
+          <option value="4:3">4:3</option>
+          <option value="3:4">3:4</option>
+          <option value="16:9">16:9</option>
+          <option value="9:16">9:16</option>
+        `;
+        sel.value = item.aspect || "16:9";
+        sel.addEventListener("change", () => {
+          item.aspect = sel.value;
+          renderPending();
+          if (activeId === item.id) openEditorFor(item.id);
+        });
+
+        row1.appendChild(cat);
+        row1.appendChild(sel);
+
+        const actions = document.createElement("div");
+        actions.className = "batchItem__actions";
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn btn--ghost";
+        btnEdit.type = "button";
+        btnEdit.textContent = "编辑";
+        btnEdit.addEventListener("click", () => openEditorFor(item.id));
+
+        const btnRemove = document.createElement("button");
+        btnRemove.className = "btn btn--ghost";
+        btnRemove.type = "button";
+        btnRemove.textContent = "移除";
+        btnRemove.addEventListener("click", () => {
+          if (!confirm("移除该图片？")) return;
+          const idx = pending.findIndex((x) => x.id === item.id);
+          if (idx >= 0) {
+            try {
+              if (pending[idx].objectUrl) URL.revokeObjectURL(pending[idx].objectUrl);
+            } catch {}
+            pending.splice(idx, 1);
+          }
+          if (activeId === item.id) {
+            activeId = null;
+            if (styleCropWrap) styleCropWrap.hidden = true;
+          }
+          renderPending();
+        });
+
+        const status = document.createElement("div");
+        status.className = "batchItem__status";
+        status.textContent = item.fullDataUrl ? "已裁剪" : "未裁剪";
+
+        actions.appendChild(btnEdit);
+        actions.appendChild(btnRemove);
+        actions.appendChild(status);
+
+        meta.appendChild(row1);
+        meta.appendChild(actions);
+
+        wrap.appendChild(thumb);
+        wrap.appendChild(meta);
+        styleBatchList.appendChild(wrap);
+      }
+    };
+
+    btnAddStyle.addEventListener("click", () => {
+      clearForm();
+      openStyleModal();
+    });
+
+    for (const elClose of Array.from(document.querySelectorAll("[data-close-style=\"1\"]"))) {
+      elClose.addEventListener("click", closeStyleModal);
+    }
+    btnStyleCancel?.addEventListener("click", closeStyleModal);
+
+    styleFile?.addEventListener("change", async () => {
+      const files = Array.from(styleFile.files || []);
+      if (files.length === 0) return;
+      pending = [];
+      activeId = null;
+      if (styleCropWrap) styleCropWrap.hidden = true;
+
+      for (const f of files) {
+        if (!String(f.type || "").startsWith("image/")) continue;
+        const objectUrl = URL.createObjectURL(f);
+        pending.push({
+          id: `tmp_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+          fileName: f.name,
+          objectUrl,
+          category: "",
+          aspect: "16:9",
+          thumbDataUrl: null,
+          fullDataUrl: null,
+          fullW: 0,
+          fullH: 0,
+        });
+      }
+      renderPending();
+      if (pending[0]) await openEditorFor(pending[0].id);
+    });
+
+    styleAspect?.addEventListener("change", () => {
+      const item = pending.find((x) => x.id === activeId);
+      if (!item) return;
+      item.aspect = styleAspect.value;
+      const a = aspectMap[item.aspect] || 16 / 9;
+      cropper.setAspect(a);
+      if (styleCropStage) styleCropStage.style.aspectRatio = `${a}`;
+      renderPending();
+    });
+
+    styleItemCategory?.addEventListener("input", () => {
+      const item = pending.find((x) => x.id === activeId);
+      if (!item) return;
+      item.category = styleItemCategory.value;
+      renderPending();
+    });
+
+    btnStyleApply?.addEventListener("click", () => {
+      const item = pending.find((x) => x.id === activeId);
+      if (!item) return alert("请先在列表里选择一张图片编辑。");
+      const category = String(item.category || "").trim();
+      if (!category) return alert("请填写分类。");
+      const dims = aspectToDims(item.aspect || "16:9");
+      const thumb = cropper.cropToDataUrl(dims.thumbW, dims.thumbH);
+      const full = cropper.cropToDataUrl(dims.fullW, dims.fullH);
+      if (!thumb || !full) return alert("请先完成裁剪。");
+      item.thumbDataUrl = thumb;
+      item.fullDataUrl = full;
+      item.fullW = dims.fullW;
+      item.fullH = dims.fullH;
+      renderPending();
     });
 
     btnStyleSave?.addEventListener("click", () => {
-      const category = String(styleCategory?.value || "").trim();
-      if (!category) return alert("请填写分类。");
-      const thumb = cropper.cropToDataUrl(480, 270); // list thumb
-      const full = cropper.cropToDataUrl(1600, 900); // quote / export
-      if (!thumb || !full) return alert("请上传图片并完成裁剪。");
-      const id = `st_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-      styleLibrary.unshift({ id, category, image: thumb, imageThumb: thumb, imageFull: full });
+      if (!pending.length) return alert("请先选择图片。");
+
+      const ready = pending.filter((x) => String(x.category || "").trim() && x.thumbDataUrl && x.fullDataUrl);
+      if (ready.length !== pending.length) {
+        return alert("请先为每张图片填写分类并点击“保存本张”（状态变为已裁剪），再确认上传。");
+      }
+
+      for (const x of ready.reverse()) {
+        const id = `st_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        styleLibrary.unshift({
+          id,
+          category: String(x.category || "").trim(),
+          aspect: x.aspect || "16:9",
+          image: x.thumbDataUrl,
+          imageThumb: x.thumbDataUrl,
+          imageFull: x.fullDataUrl,
+          fullW: x.fullW,
+          fullH: x.fullH,
+        });
+      }
       saveStyleLibrary();
       closeStyleModal();
       renderAll();

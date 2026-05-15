@@ -140,6 +140,32 @@ body {
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 body.mobile .formGrid { grid-template-columns: 1fr; }
 
+.batchList { display: grid; gap: 8px; margin-top: 8px; }
+.batchItem {
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.75);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.batchItem__thumb {
+  width: 88px;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.10);
+  overflow: hidden;
+  background: rgba(0,0,0,0.04);
+}
+.batchItem__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.batchItem__meta { display: grid; gap: 8px; min-width: 0; }
+.batchItem__row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.batchItem__row .input { max-width: none; }
+.batchItem__actions { display: flex; gap: 8px; align-items: center; }
+.batchItem__status { font-size: 12px; color: var(--muted); }
+
 .cropWrap { margin-top: 10px; display: grid; gap: 8px; }
 .cropStage {
   position: relative;
