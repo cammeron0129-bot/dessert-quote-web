@@ -129,6 +129,7 @@ body {
   max-height: calc(100vh - 24px);
   padding: 14px 14px 12px 14px;
 }
+.modal__body { overflow: auto; padding-right: 2px; }
 .modal__content--small {
   width: min(460px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
@@ -287,6 +288,10 @@ body.mobile .formGrid { grid-template-columns: 1fr; }
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.modal__content--form {
   display: grid;
   grid-template-rows: auto 1fr auto;
 }

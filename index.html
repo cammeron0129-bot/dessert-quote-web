@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>当夏｜菜单选择 → 自动报价单</title>
-    <link rel="stylesheet" href="./styles.css?v=watermark2" />
+    <link rel="stylesheet" href="./styles.css?v=uploadfix1" />
   </head>
   <body>
     <header class="topbar">
@@ -178,37 +178,39 @@
         <button class="modal__close" type="button" data-close-custom="1" aria-label="关闭">×</button>
         <div class="modal__title">新增自定义产品</div>
 
-        <div class="formGrid">
-          <label class="field">
-            <div class="field__label">产品名称</div>
-            <input id="customName" class="input" type="text" placeholder="例如：芒果千层" />
-          </label>
-          <label class="field">
-            <div class="field__label">分类</div>
-            <input id="customCategory" class="input" type="text" placeholder="点击选择或输入新增分类" list="customCategoryList" />
-            <datalist id="customCategoryList"></datalist>
-          </label>
-          <label class="field">
-            <div class="field__label">单价（元）</div>
-            <input id="customPrice" class="input input--num" type="number" min="0" step="0.5" placeholder="例如：12" />
-          </label>
-          <label class="field">
-            <div class="field__label">起订量</div>
-            <input id="customMinOrder" class="input" type="text" placeholder="例如：10份 / 1项" />
-          </label>
-          <label class="field">
-            <div class="field__label">图片上传</div>
-            <input id="customFile" class="input" type="file" accept="image/*" />
-          </label>
-        </div>
-
-        <div class="cropWrap" id="cropWrap" hidden>
-          <div class="cropStage" id="cropStage">
-            <img id="cropImg" alt="裁剪预览" />
-            <div class="cropMask" aria-hidden="true"></div>
-            <div class="cropBox" id="cropBox" aria-hidden="true"><div class="cropHandle" id="cropHandle" aria-hidden="true"></div></div>
+        <div class="modal__body">
+          <div class="formGrid">
+            <label class="field">
+              <div class="field__label">产品名称</div>
+              <input id="customName" class="input" type="text" placeholder="例如：芒果千层" />
+            </label>
+            <label class="field">
+              <div class="field__label">分类</div>
+              <input id="customCategory" class="input" type="text" placeholder="点击选择或输入新增分类" list="customCategoryList" />
+              <datalist id="customCategoryList"></datalist>
+            </label>
+            <label class="field">
+              <div class="field__label">单价（元）</div>
+              <input id="customPrice" class="input input--num" type="number" min="0" step="0.5" placeholder="例如：12" />
+            </label>
+            <label class="field">
+              <div class="field__label">起订量</div>
+              <input id="customMinOrder" class="input" type="text" placeholder="例如：10份 / 1项" />
+            </label>
+            <label class="field">
+              <div class="field__label">图片上传</div>
+              <input id="customFile" class="input" type="file" accept="image/*" />
+            </label>
           </div>
-          <div class="cropHint muted">拖动图片调整位置；滚轮/触控板可缩放。裁剪为与菜单缩略图一致的方形。</div>
+
+          <div class="cropWrap" id="cropWrap" hidden>
+            <div class="cropStage" id="cropStage">
+              <img id="cropImg" alt="裁剪预览" />
+              <div class="cropMask" aria-hidden="true"></div>
+              <div class="cropBox" id="cropBox" aria-hidden="true"><div class="cropHandle" id="cropHandle" aria-hidden="true"></div></div>
+            </div>
+            <div class="cropHint muted">拖动图片调整位置；滚轮/触控板可缩放。裁剪为与菜单缩略图一致的方形。</div>
+          </div>
         </div>
 
         <div class="modal__actions">
@@ -238,6 +240,6 @@
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=custom-upload2"></script>
+    <script src="./app.js?v=custom-upload3"></script>
   </body>
 </html>
