@@ -1250,10 +1250,6 @@ function init() {
 
     headTop.appendChild(logo);
     headTop.appendChild(title);
-    // spacer to allow title to be perfectly centered between left logo and right empty space
-    const headSpacer = document.createElement("div");
-    headSpacer.className = "paper__headSpacer";
-    headTop.appendChild(headSpacer);
 
     const meta = document.createElement("div");
     meta.className = "paper__meta";
