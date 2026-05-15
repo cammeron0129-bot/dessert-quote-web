@@ -2096,7 +2096,12 @@ function init() {
               const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
               const segScale = clamp(sNeeded, 0.7, s);
               if (segScale < s - 0.001) {
-                segments.push({ start, heightUnscaled: Math.max(1, need), scale: segScale, fullHeight: true });
+                // Important: even though we keep a full-height stage (to prevent visual cut),
+                // we should NOT render beyond the style block bottom, otherwise next page will
+                // start at overflow.bottom and the next block can appear clipped/duplicated.
+                const maxUnscaledVisible = Math.max(1, stageHeight / segScale);
+                const heightUnscaled = Math.min(Math.max(1, need), maxUnscaledVisible);
+                segments.push({ start, heightUnscaled, scale: segScale, fullHeight: true });
                 start = overflow.bottom;
                 continue;
               }
