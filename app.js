@@ -1424,6 +1424,37 @@ function init() {
     btnExportPdf.textContent = "生成中...";
 
     try {
+      const watermarkUrl = await (async () => {
+        // Watermark is implemented as CSS background so it only appears in print/PDF
+        // when the user enables browser print option “背景图形 / Background graphics”.
+        const toDataUrl = (blob) =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () => reject(new Error("read watermark failed"));
+            reader.readAsDataURL(blob);
+          });
+
+        const candidates = [
+          "./assets/brand/watermark.png",
+          "assets/brand/watermark.png",
+          // fallback to absolute based on current origin/path
+          new URL("./assets/brand/watermark.png", location.href).toString(),
+        ];
+
+        for (const url of candidates) {
+          try {
+            const res = await fetch(url, { cache: "force-cache" });
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            const dataUrl = await toDataUrl(blob);
+            if (dataUrl.startsWith("data:image/")) return dataUrl;
+          } catch {}
+        }
+        // If fetch/dataURL fails, fall back to relative URL (may still work).
+        return "./assets/brand/watermark.png";
+      })();
+
       // A4 at 96dpi (approx). Fit width, then paginate vertically if needed.
       const A4_W = 794;
       const A4_H = 1123;
@@ -1456,15 +1487,33 @@ function init() {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <base href="${location.href}">
     <title>${exportName}</title>
-    <link rel="stylesheet" href="./styles.css?v=highlight1" />
+    <link rel="stylesheet" href="./styles.css?v=highlight2" />
     <style>
       @page { size: A4; margin: 0; }
       html, body { margin: 0; padding: 0; background: #fff !important; }
-      .page { width: ${A4_W}px; height: ${A4_H}px; background: #fff; overflow: hidden; box-sizing: border-box; page-break-after: always; }
+      .page { width: ${A4_W}px; height: ${A4_H}px; background: #fff; overflow: hidden; box-sizing: border-box; page-break-after: always; position: relative; }
       .page:last-child { page-break-after: auto; }
-      .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; }
+      .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; position: relative; z-index: 1; background: transparent; }
       .scale {
         transform-origin: top left;
+      }
+      /* Watermark: CSS background so it appears only when enabling browser print option “背景图形”. */
+      .page::before{
+        content:"";
+        position:absolute;
+        /* extend so rotated tiling still covers page */
+        top:-45%;
+        left:-45%;
+        width:190%;
+        height:190%;
+        background-image: url("${watermarkUrl}");
+        background-repeat: repeat;
+        background-size: 220px 220px;
+        background-position: 0 0;
+        transform: rotate(-30deg);
+        opacity: 0.2;
+        pointer-events:none;
+        z-index: 0;
       }
       /* remove shadows/rounding for print */
       .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
@@ -1509,6 +1558,31 @@ function init() {
         );
       };
 
+      const waitWatermark = async () => {
+        // Background images aren't part of doc.images; preload so print isn't blank.
+        if (!watermarkUrl) return;
+        try {
+          const img = doc.createElement("img");
+          img.style.position = "fixed";
+          img.style.width = "1px";
+          img.style.height = "1px";
+          img.style.opacity = "0";
+          img.style.pointerEvents = "none";
+          img.setAttribute("aria-hidden", "true");
+          img.src = watermarkUrl;
+          doc.body.appendChild(img);
+          await new Promise((resolve) => {
+            const done = () => resolve();
+            img.addEventListener("load", done, { once: true });
+            img.addEventListener("error", done, { once: true });
+          });
+          try {
+            img.remove();
+          } catch {}
+        } catch {}
+      };
+
+      await waitWatermark();
       await waitImages();
       // Fit width, then paginate height
       const stage = measureStage;
