@@ -1512,7 +1512,7 @@ function init() {
         background-size: 220px 220px;
         background-position: 0 0;
         transform: rotate(-30deg);
-        opacity: 0.2;
+        opacity: 0.05;
         pointer-events:none;
         z-index: 10;
       }
@@ -1616,10 +1616,18 @@ function init() {
 
       blocks.sort((a, b) => a.top - b.top);
 
+      const effectiveContentHeight = (() => {
+        const maxBottom = blocks.reduce((m, b) => Math.max(m, b.bottom), 0);
+        // Prefer last “real content” bottom to avoid extra blank pages caused by
+        // min-height/padding or off-by-one rounding in rectContent.height.
+        const h = Math.max(1, Math.ceil(maxBottom || contentHeight));
+        return h;
+      })();
+
       const segments = [];
       let start = 0;
       const EPS = 6;
-      while (start < contentHeight - EPS) {
+      while (start < effectiveContentHeight - EPS) {
         const max = start + pageHeightUnscaled;
         // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
         const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
@@ -1636,9 +1644,16 @@ function init() {
         }
 
         // 没有切割：正常推进一页
-        const heightUnscaled = Math.min(pageHeightUnscaled, contentHeight - start);
+        const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
         segments.push({ start, heightUnscaled });
         start = start + pageHeightUnscaled;
+      }
+      // Remove trailing zero-content segments (can happen due to rounding)
+      while (segments.length > 1) {
+        const last = segments[segments.length - 1];
+        if (!last) break;
+        if ((last.start || 0) >= effectiveContentHeight - EPS) segments.pop();
+        else break;
       }
       const totalPages = Math.max(1, segments.length);
 
@@ -1652,7 +1667,7 @@ function init() {
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = `${Math.max(1, Math.floor(seg.heightUnscaled * s) - 2)}px`;
+        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * s))}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
         sc.style.transform = `scale(${s})`;
