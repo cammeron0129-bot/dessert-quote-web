@@ -2052,121 +2052,80 @@ function init() {
       const pageHeightUnscaled = Math.max(1, (stageHeight - SAFE_PAD) / s);
 
       // 构建“不可切割块”列表：每一行、合计块、订购说明块与行、摆台风格块
-      const escapeAttr = (val) => {
-        try {
-          if (globalThis.CSS && typeof globalThis.CSS.escape === "function") return globalThis.CSS.escape(String(val));
-        } catch {}
-        return String(val).replace(/["\\\\]/g, "\\\\$&");
-      };
-      const styleShrinks = new Map();
-      const applyStyleShrinks = (root) => {
-        for (const [id, shrink] of styleShrinks.entries()) {
-          if (!id || !shrink?.imageHeight) continue;
-          const el = root.querySelector(`[data-style-id="${escapeAttr(id)}"]`);
-          const img = el?.querySelector(".quoteStyles__img");
-          if (!img) continue;
-          img.style.height = `${Math.max(48, shrink.imageHeight)}px`;
-          img.style.aspectRatio = "auto";
-          img.style.objectFit = "cover";
-        }
-      };
-      const measureContent = () => {
-        applyStyleShrinks(imported);
-        const rectContentNow = imported.getBoundingClientRect();
-        const contentTopNow = rectContentNow.top;
-        const blocks = [];
-        const pushBlock = (el, kind = "generic") => {
-          if (!el || !el.getBoundingClientRect) return;
-          const rEl = el.getBoundingClientRect();
-          const top = Math.max(0, rEl.top - contentTopNow);
-          const bottom = Math.max(0, rEl.bottom - contentTopNow);
-          if (!Number.isFinite(top) || !Number.isFinite(bottom) || !(bottom > top + 1)) return;
-          const id = kind === "style" ? String(el?.dataset?.styleId || "") : "";
-          const imgRect = kind === "style" ? el.querySelector(".quoteStyles__img")?.getBoundingClientRect() : null;
-          const imageHeight = imgRect && Number.isFinite(imgRect.height) ? imgRect.height : 0;
-          blocks.push({ top, bottom, kind, id, imageHeight });
-        };
-
-        for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr, "row");
-        pushBlock(imported.querySelector(".totals"), "totals");
-        pushBlock(imported.querySelector(".paper__foot"), "foot");
-        for (const div of Array.from(imported.querySelectorAll(".orderNotes > div"))) pushBlock(div, "noteLine");
-        // style blocks should not be cut; additionally support shrinking the image if only a small part spills over.
-        for (const el of Array.from(imported.querySelectorAll(".quoteStyles__item"))) pushBlock(el, "style");
-
-        blocks.sort((a, b) => a.top - b.top);
-
-        const effectiveContentHeight = (() => {
-          const maxBottom = blocks.reduce((m, b) => Math.max(m, b.bottom), 0);
-          // Prefer last “real content” bottom to avoid extra blank pages caused by
-          // min-height/padding or off-by-one rounding in rectContent.height.
-          const h = Math.max(1, Math.ceil(maxBottom || rectContentNow.height || contentHeight));
-          return h;
-        })();
-        return { blocks, effectiveContentHeight };
+      const blocks = [];
+      const pushBlock = (el, kind = "generic") => {
+        if (!el || !el.getBoundingClientRect) return;
+        const rEl = el.getBoundingClientRect();
+        const top = Math.max(0, rEl.top - contentTop);
+        const bottom = Math.max(0, rEl.bottom - contentTop);
+        if (Number.isFinite(top) && Number.isFinite(bottom) && bottom > top + 1) blocks.push({ top, bottom, kind });
       };
 
+      for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr, "row");
+      pushBlock(imported.querySelector(".totals"), "totals");
+      pushBlock(imported.querySelector(".paper__foot"), "foot");
+      for (const div of Array.from(imported.querySelectorAll(".orderNotes > div"))) pushBlock(div, "noteLine");
+      // style blocks should not be cut; additionally support "shrink a bit" if only small split would happen
+      for (const el of Array.from(imported.querySelectorAll(".quoteStyles__item"))) pushBlock(el, "style");
+
+      blocks.sort((a, b) => a.top - b.top);
+
+      const effectiveContentHeight = (() => {
+        const maxBottom = blocks.reduce((m, b) => Math.max(m, b.bottom), 0);
+        // Prefer last “real content” bottom to avoid extra blank pages caused by
+        // min-height/padding or off-by-one rounding in rectContent.height.
+        const h = Math.max(1, Math.ceil(maxBottom || contentHeight));
+        return h;
+      })();
+
+      const segments = [];
+      let start = 0;
       const EPS = 6;
-      const buildSegments = () => {
-        for (let pass = 0; pass < 120; pass += 1) {
-          const { blocks, effectiveContentHeight } = measureContent();
-          const segments = [];
-          let start = 0;
-          let shouldRemeasure = false;
+      while (start < effectiveContentHeight - EPS) {
+        const max = start + pageHeightUnscaled;
+        // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
+        const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
 
-          while (start < effectiveContentHeight - EPS) {
-            const max = start + pageHeightUnscaled;
-            // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
-            const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
-
-            if (overflow) {
-              if (overflow.kind === "style") {
-                const blockH = Math.max(1, overflow.bottom - overflow.top);
-                const cut = overflow.bottom - max; // how much would be cut off
-                const cutRatio = cut / blockH;
-                // If cut is small (<=20%), shrink ONLY THIS STYLE IMAGE so it fully fits in this page.
-                if (cutRatio <= 0.2 && overflow.id && overflow.imageHeight > 1) {
-                  const needDelta = cut + 4;
-                  const currentHeight = overflow.imageHeight;
-                  const nextHeight = Math.max(48, currentHeight - needDelta);
-                  if (nextHeight < currentHeight - 0.5) {
-                    styleShrinks.set(overflow.id, { imageHeight: nextHeight });
-                    shouldRemeasure = true;
-                    break;
-                  }
-                }
-                // cut would be large: move the whole block to next page
+        if (overflow) {
+          if (overflow.kind === "style") {
+            const blockH = Math.max(1, overflow.bottom - overflow.top);
+            const cut = overflow.bottom - max; // how much would be cut off
+            const cutRatio = cut / blockH;
+            // If cut is small (<=20%), shrink ONLY THIS PAGE slightly so the whole style block fits.
+            if (cutRatio <= 0.2) {
+              const need = overflow.bottom - start + 2; // include tiny safety
+              const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
+              const segScale = clamp(sNeeded, 0.7, s);
+              if (segScale < s - 0.001) {
+                segments.push({ start, heightUnscaled: Math.max(1, need), scale: segScale });
+                start = Math.max(start + 1, overflow.bottom);
+                continue;
               }
-              // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
-              const nextStart = Math.max(overflow.top, start + EPS);
-              // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
-              const end = Math.max(start + 1, nextStart - 2);
-              const heightUnscaled = Math.max(1, end - start);
-              segments.push({ start, heightUnscaled, scale: s });
-              start = nextStart;
-              continue;
             }
-
-            // 没有切割：正常推进一页
-            const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
-            segments.push({ start, heightUnscaled, scale: s });
-            start = start + pageHeightUnscaled;
+            // cut would be large: move the whole block to next page
           }
-
-          if (shouldRemeasure) continue;
-          // Remove trailing zero-content segments (can happen due to rounding)
-          while (segments.length > 1) {
-            const last = segments[segments.length - 1];
-            if (!last) break;
-            if ((last.start || 0) >= effectiveContentHeight - EPS) segments.pop();
-            else break;
-          }
-          return segments;
+          // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
+          const nextStart = Math.max(overflow.top, start + EPS);
+          // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
+          const end = Math.max(start + 1, nextStart - 2);
+          const heightUnscaled = Math.max(1, end - start);
+          segments.push({ start, heightUnscaled, scale: s });
+          start = nextStart;
+          continue;
         }
-        return [{ start: 0, heightUnscaled: pageHeightUnscaled, scale: s }];
-      };
-      const segments = buildSegments();
+
+        // 没有切割：正常推进一页
+        const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
+        segments.push({ start, heightUnscaled, scale: s });
+        start = start + pageHeightUnscaled;
+      }
       // Remove trailing zero-content segments (can happen due to rounding)
+      while (segments.length > 1) {
+        const last = segments[segments.length - 1];
+        if (!last) break;
+        if ((last.start || 0) >= effectiveContentHeight - EPS) segments.pop();
+        else break;
+      }
       const totalPages = Math.max(1, segments.length);
 
       // Clear and rebuild pages with clipped offsets
@@ -2185,7 +2144,6 @@ function init() {
         sc.style.transform = `scale(${seg.scale || s})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
-        applyStyleShrinks(clone);
         clone.style.top = `-${Math.floor(seg.start || 0)}px`;
         sc.appendChild(clone);
         st.appendChild(sc);
