@@ -151,6 +151,7 @@ body.mobile .formGrid { grid-template-columns: 1fr; }
   overflow: hidden;
   touch-action: none;
 }
+.cropStage--169 { aspect-ratio: 16 / 9; }
 .cropStage img { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); will-change: transform; user-select: none; -webkit-user-drag: none; }
 .cropMask { position:absolute; inset:0; background: rgba(0,0,0,0.35); }
 .cropBox{
@@ -167,6 +168,8 @@ body.mobile .formGrid { grid-template-columns: 1fr; }
   touch-action: none;
   cursor: move;
 }
+.cropBox--169 { border-radius: 12px; }
+.cropBox--169 { aspect-ratio: 16 / 9; }
 .cropHint { font-size: 12px; }
 
 .cropHandle{
@@ -504,6 +507,31 @@ body.mobile .formGrid { grid-template-columns: 1fr; }
   content: "点击此处编辑订购说明（会打印到 PDF）";
   color: rgba(17, 24, 39, 0.45);
 }
+
+.quoteStyles { margin-top: 12px; display: grid; gap: 10px; }
+.quoteStyles__item {
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.quoteStyles__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  background: rgba(0,0,0,0.05);
+}
+.quoteStyles__cap {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: rgba(17,24,39,0.78);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+.quoteStyles__tag { font-weight: 800; }
 
 @media print {
   body { background: #fff; }

@@ -71,6 +71,7 @@ function buildInitialState() {
     meta: defaultMeta(),
     selected: {}, // { [name]: { qty, unitPrice, minOrder, category } }
     quoteLines: [], // { id, name, qty, unitPrice, source? }
+    selectedStyles: [], // [{ id, category, image, imageThumb }]
     nextId: 1,
   };
 }
@@ -103,6 +104,15 @@ function debounce(fn, waitMs) {
   };
 }
 
+function escapeHtml(s) {
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function init() {
   const menu = [
     SERVICE_FEE_MENU_ITEM,
@@ -124,10 +134,28 @@ function init() {
     }
   })();
 
+  const STYLE_STORAGE_KEY = "dangxia_styles_v1";
+  const styleLibrary = (() => {
+    try {
+      const raw = localStorage.getItem(STYLE_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const saveStyleLibrary = () => {
+    try {
+      localStorage.setItem(STYLE_STORAGE_KEY, JSON.stringify(styleLibrary));
+    } catch {}
+  };
+
   // Ensure meta keys exist
   state.meta = { ...defaultMeta(), ...(state.meta || {}) };
   state.selected = state.selected || {};
   state.quoteLines = state.quoteLines || [];
+  state.selectedStyles = Array.isArray(state.selectedStyles) ? state.selectedStyles : [];
   state.nextId = state.nextId || 1;
 
   // UI refs
@@ -139,6 +167,11 @@ function init() {
   const menuCount = el("#menuCount");
   const categoryBar = el("#categoryBar");
   const btnAddCustom = el("#btnAddCustom");
+
+  // Style tab refs
+  const styleList = el("#styleList");
+  const styleCount = el("#styleCount");
+  const btnAddStyle = el("#btnAddStyle");
 
   const metaDate = el("#metaDate");
   const metaLocation = el("#metaLocation");
@@ -159,6 +192,7 @@ function init() {
   const qOrderNotesTitle = el("#qOrderNotesTitle");
   const qOrderNotes = el("#qOrderNotes");
   const quotePaper = el("#quotePaper");
+  const qStyles = el("#qStyles");
 
   const quoteTbody = el("#quoteTbody");
   const subtotalEl = el("#subtotal");
@@ -188,6 +222,21 @@ function init() {
   const btnCustomCancel = el("#btnCustomCancel");
   const btnCustomSave = el("#btnCustomSave");
 
+  // Style upload modal refs (optional)
+  const styleModal = el("#styleModal");
+  const styleCategory = el("#styleCategory");
+  const styleFile = el("#styleFile");
+  const styleCropWrap = el("#styleCropWrap");
+  const styleCropStage = el("#styleCropStage");
+  const styleCropImg = el("#styleCropImg");
+  const styleCropBox = el("#styleCropBox");
+  const styleCropHandle = el("#styleCropHandle");
+  const btnStyleCancel = el("#btnStyleCancel");
+  const btnStyleSave = el("#btnStyleSave");
+
+  const closeStyleModal = () => styleModal?.setAttribute("aria-hidden", "true");
+  const openStyleModal = () => styleModal?.setAttribute("aria-hidden", "false");
+
   const closeCustomModal = () => customModal?.setAttribute("aria-hidden", "true");
   const openCustomModal = () => customModal?.setAttribute("aria-hidden", "false");
 
@@ -215,6 +264,231 @@ function init() {
     boxCy: 0,
     boxDragging: false,
     boxResizing: false,
+  };
+
+  const createCropper = ({ stageEl, imgEl, boxEl, handleEl, aspect = 1 }) => {
+    const st = {
+      ready: false,
+      imgNaturalW: 0,
+      imgNaturalH: 0,
+      tx: 0,
+      ty: 0,
+      scale: 1,
+      lastX: 0,
+      lastY: 0,
+      draggingImg: false,
+      boxSize: 0,
+      boxCx: 0,
+      boxCy: 0,
+      boxDragging: false,
+      boxResizing: false,
+      aspect,
+    };
+
+    const applyBoxLayout = () => {
+      if (!stageEl || !boxEl) return;
+      const stageRect = stageEl.getBoundingClientRect();
+      const maxW = stageRect.width;
+      const maxH = stageRect.height;
+      const minW = 120;
+      const maxBoxW = Math.min(maxW, maxH * st.aspect);
+      const w = clamp(st.boxSize || Math.floor(maxBoxW * 0.78), minW, maxBoxW);
+      st.boxSize = w;
+      const h = w / st.aspect;
+      const halfW = w / 2;
+      const halfH = h / 2;
+      st.boxCx = clamp(st.boxCx || maxW / 2, halfW, maxW - halfW);
+      st.boxCy = clamp(st.boxCy || maxH / 2, halfH, maxH - halfH);
+      boxEl.style.width = `${w}px`;
+      boxEl.style.height = `${h}px`;
+      boxEl.style.left = `${st.boxCx}px`;
+      boxEl.style.top = `${st.boxCy}px`;
+      boxEl.style.transform = "translate(-50%, -50%)";
+    };
+
+    const setImgTransform = () => {
+      if (!imgEl) return;
+      imgEl.style.transform = `translate(-50%, -50%) translate(${st.tx}px, ${st.ty}px) scale(${st.scale})`;
+    };
+
+    const resetToCover = () => {
+      if (!stageEl || !boxEl || !imgEl) return;
+      applyBoxLayout();
+      const w = st.boxSize;
+      const h = w / st.aspect;
+      const iw = st.imgNaturalW || 1;
+      const ih = st.imgNaturalH || 1;
+      st.scale = Math.max(w / iw, h / ih);
+      st.tx = 0;
+      st.ty = 0;
+      setImgTransform();
+    };
+
+    const clampImgToCoverBox = () => {
+      if (!boxEl) return;
+      const w = st.boxSize || boxEl.getBoundingClientRect().width;
+      const h = w / st.aspect;
+      const iw = st.imgNaturalW * st.scale;
+      const ih = st.imgNaturalH * st.scale;
+      const maxX = Math.max(0, iw / 2 - w / 2);
+      const maxY = Math.max(0, ih / 2 - h / 2);
+      st.tx = clamp(st.tx, -maxX, maxX);
+      st.ty = clamp(st.ty, -maxY, maxY);
+    };
+
+    const cropToDataUrl = (outW, outH) => {
+      if (!stageEl || !boxEl || !imgEl) return null;
+      if (!st.ready) return null;
+      const stageRect = stageEl.getBoundingClientRect();
+      const w = st.boxSize || boxEl.getBoundingClientRect().width;
+      const h = w / st.aspect;
+      const cx = st.boxCx || stageRect.width / 2;
+      const cy = st.boxCy || stageRect.height / 2;
+      const stageCenterX = stageRect.width / 2;
+      const stageCenterY = stageRect.height / 2;
+
+      const iw = st.imgNaturalW;
+      const ih = st.imgNaturalH;
+      const s = st.scale;
+
+      const srcLeft = (cx - w / 2 - stageCenterX - st.tx) / s + iw / 2;
+      const srcTop = (cy - h / 2 - stageCenterY - st.ty) / s + ih / 2;
+      const srcW = w / s;
+      const srcH = h / s;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, outW, outH);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(imgEl, srcLeft, srcTop, srcW, srcH, 0, 0, outW, outH);
+      return canvas.toDataURL("image/jpeg", 0.9);
+    };
+
+    const clear = () => {
+      st.ready = false;
+      st.tx = 0;
+      st.ty = 0;
+      st.scale = 1;
+      st.boxSize = 0;
+      st.boxCx = 0;
+      st.boxCy = 0;
+      st.boxDragging = false;
+      st.boxResizing = false;
+      st.draggingImg = false;
+    };
+
+    const bind = () => {
+      if (!stageEl || !imgEl || !boxEl) return;
+
+      const imgDown = (ev) => {
+        if (!st.ready) return;
+        st.draggingImg = true;
+        const p = ev.touches?.[0] || ev;
+        st.lastX = p.clientX;
+        st.lastY = p.clientY;
+      };
+      stageEl.addEventListener("mousedown", imgDown);
+      stageEl.addEventListener("touchstart", imgDown, { passive: true });
+
+      const boxDown = (ev) => {
+        if (!st.ready) return;
+        st.boxDragging = true;
+        const p = ev.touches?.[0] || ev;
+        st.lastX = p.clientX;
+        st.lastY = p.clientY;
+        ev.preventDefault?.();
+        ev.stopPropagation?.();
+      };
+      boxEl.addEventListener("mousedown", boxDown);
+      boxEl.addEventListener("touchstart", boxDown, { passive: false });
+
+      const handleDown = (ev) => {
+        if (!st.ready) return;
+        st.boxResizing = true;
+        const p = ev.touches?.[0] || ev;
+        st.lastX = p.clientX;
+        st.lastY = p.clientY;
+        ev.preventDefault?.();
+        ev.stopPropagation?.();
+      };
+      handleEl?.addEventListener("mousedown", handleDown);
+      handleEl?.addEventListener("touchstart", handleDown, { passive: false });
+
+      const move = (ev) => {
+        if (!st.draggingImg && !st.boxDragging && !st.boxResizing) return;
+        const p = ev.touches?.[0] || ev;
+        const dx = p.clientX - st.lastX;
+        const dy = p.clientY - st.lastY;
+        st.lastX = p.clientX;
+        st.lastY = p.clientY;
+
+        if (st.draggingImg) {
+          st.tx += dx;
+          st.ty += dy;
+          clampImgToCoverBox();
+          setImgTransform();
+        } else if (st.boxDragging) {
+          st.boxCx += dx;
+          st.boxCy += dy;
+          applyBoxLayout();
+          clampImgToCoverBox();
+          setImgTransform();
+        } else if (st.boxResizing) {
+          const d = (dx + dy) / 2;
+          st.boxSize = (st.boxSize || 0) + d * 2;
+          applyBoxLayout();
+          const w = st.boxSize;
+          const h = w / st.aspect;
+          const iw = st.imgNaturalW || 1;
+          const ih = st.imgNaturalH || 1;
+          const minScale = Math.max(w / iw, h / ih);
+          if (st.scale < minScale) st.scale = minScale;
+          clampImgToCoverBox();
+          setImgTransform();
+        }
+        ev.preventDefault?.();
+      };
+      const up = () => {
+        st.draggingImg = false;
+        st.boxDragging = false;
+        st.boxResizing = false;
+      };
+
+      window.addEventListener("mousemove", move, { passive: false });
+      window.addEventListener("touchmove", move, { passive: false });
+      window.addEventListener("mouseup", up);
+      window.addEventListener("touchend", up);
+
+      stageEl.addEventListener(
+        "wheel",
+        (ev) => {
+          if (!st.ready) return;
+          const delta = ev.deltaY || 0;
+          const factor = delta > 0 ? 0.92 : 1.08;
+          st.scale = clamp(st.scale * factor, 0.2, 10);
+          clampImgToCoverBox();
+          setImgTransform();
+          ev.preventDefault();
+        },
+        { passive: false }
+      );
+    };
+
+    bind();
+
+    return {
+      state: st,
+      applyBoxLayout,
+      setImgTransform,
+      resetToCover,
+      clampImgToCoverBox,
+      cropToDataUrl,
+      clear,
+    };
   };
 
   const applyCropBoxLayout = () => {
@@ -1526,6 +1800,31 @@ function init() {
 
     wrapper.appendChild(foot);
 
+    // Styles appended below order notes (same width as quote paper)
+    if (Array.isArray(state.selectedStyles) && state.selectedStyles.length > 0) {
+      const stylesWrap = document.createElement("div");
+      stylesWrap.className = "quoteStyles";
+      const ids = state.selectedStyles.map((x) => x.id);
+      const selected = ids.map((id) => styleLibrary.find((s) => s.id === id)).filter(Boolean);
+      for (const s of selected) {
+        const item = document.createElement("div");
+        item.className = "quoteStyles__item";
+        if (s.image) {
+          const img = document.createElement("img");
+          img.className = "quoteStyles__img";
+          img.src = s.image;
+          img.alt = s.category || "摆台风格";
+          item.appendChild(img);
+        }
+        const cap = document.createElement("div");
+        cap.className = "quoteStyles__cap";
+        cap.innerHTML = `<span class="quoteStyles__tag">摆台风格</span><span>${escapeHtml(s.category || "")}</span>`;
+        item.appendChild(cap);
+        stylesWrap.appendChild(item);
+      }
+      wrapper.appendChild(stylesWrap);
+    }
+
     return wrapper;
   }
 
@@ -2406,7 +2705,9 @@ function init() {
     renderMeta();
     renderCategories();
     renderMenu();
+    renderStyles();
     renderQuote();
+    renderStylesInQuote();
     renderWatermarkPreview();
   }
 
@@ -2614,6 +2915,190 @@ function init() {
     });
   }
 
+  function renderStyles() {
+    if (!styleList || !styleCount) return;
+    styleCount.textContent = `共 ${styleLibrary.length} 项（已加入 ${state.selectedStyles.length}）`;
+    styleList.innerHTML = "";
+
+    for (const s of styleLibrary) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const grid = document.createElement("div");
+      grid.className = "card__grid";
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      if (s.image) {
+        const img = document.createElement("img");
+        img.alt = s.category || "摆台风格";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.fetchPriority = "low";
+        img.src = s.imageThumb || s.image;
+        img.addEventListener("click", () => openImageModal(s.image, s.category || "摆台风格"));
+        thumb.appendChild(img);
+      } else {
+        thumb.textContent = "无图";
+      }
+
+      const content = document.createElement("div");
+      const top = document.createElement("div");
+      top.className = "card__top";
+      const left = document.createElement("div");
+      const name = document.createElement("div");
+      name.className = "card__name";
+      name.textContent = s.category || "未分类";
+      left.appendChild(name);
+      top.appendChild(left);
+
+      const meta = document.createElement("div");
+      meta.className = "card__meta";
+      meta.innerHTML = `<span>分类：<b>${s.category || "-"}</b></span>`;
+
+      const actions = document.createElement("div");
+      actions.className = "card__actions";
+
+      const joined = state.selectedStyles.some((x) => x.id === s.id);
+      const btnJoin = document.createElement("button");
+      btnJoin.className = "btn btn--ghost";
+      btnJoin.type = "button";
+      btnJoin.textContent = joined ? "移除" : "加入";
+
+      const btnDel = document.createElement("button");
+      btnDel.className = "btn btn--ghost";
+      btnDel.type = "button";
+      btnDel.textContent = "删除";
+
+      btnJoin.addEventListener("click", () => {
+        if (joined) state.selectedStyles = state.selectedStyles.filter((x) => x.id !== s.id);
+        else state.selectedStyles = [{ id: s.id }, ...state.selectedStyles];
+        saveState(state);
+        renderAll();
+      });
+
+      btnDel.addEventListener("click", () => {
+        if (!confirm(`删除摆台风格：${s.category || ""}？`)) return;
+        const idx = styleLibrary.findIndex((x) => x.id === s.id);
+        if (idx >= 0) styleLibrary.splice(idx, 1);
+        state.selectedStyles = state.selectedStyles.filter((x) => x.id !== s.id);
+        saveStyleLibrary();
+        saveState(state);
+        renderAll();
+      });
+
+      actions.appendChild(btnJoin);
+      actions.appendChild(btnDel);
+
+      content.appendChild(top);
+      content.appendChild(meta);
+      content.appendChild(actions);
+
+      grid.appendChild(thumb);
+      grid.appendChild(content);
+      card.appendChild(grid);
+      styleList.appendChild(card);
+    }
+  }
+
+  function renderStylesInQuote() {
+    if (!qStyles) return;
+    qStyles.innerHTML = "";
+    const ids = state.selectedStyles.map((x) => x.id);
+    const selected = ids.map((id) => styleLibrary.find((s) => s.id === id)).filter(Boolean);
+    if (selected.length === 0) return;
+
+    for (const s of selected) {
+      const wrap = document.createElement("div");
+      wrap.className = "quoteStyles__item";
+      if (s.image) {
+        const img = document.createElement("img");
+        img.className = "quoteStyles__img";
+        img.src = s.image;
+        img.alt = s.category || "摆台风格";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.fetchPriority = "low";
+        img.addEventListener("click", () => openImageModal(s.image, s.category || "摆台风格"));
+        wrap.appendChild(img);
+      }
+      const cap = document.createElement("div");
+      cap.className = "quoteStyles__cap";
+      cap.innerHTML = `<span class="quoteStyles__tag">摆台风格</span><span>${escapeHtml(s.category || "")}</span>`;
+      wrap.appendChild(cap);
+      qStyles.appendChild(wrap);
+    }
+  }
+
+  function initStyleUpload() {
+    if (!btnAddStyle || !styleModal) return;
+    const cropper = createCropper({
+      stageEl: styleCropStage,
+      imgEl: styleCropImg,
+      boxEl: styleCropBox,
+      handleEl: styleCropHandle,
+      aspect: 16 / 9,
+    });
+
+    const clearForm = () => {
+      if (styleCategory) styleCategory.value = "";
+      if (styleFile) styleFile.value = "";
+      if (styleCropWrap) styleCropWrap.hidden = true;
+      cropper.clear();
+    };
+
+    btnAddStyle.addEventListener("click", () => {
+      clearForm();
+      openStyleModal();
+      try {
+        styleCategory?.focus();
+      } catch {}
+    });
+
+    for (const elClose of Array.from(document.querySelectorAll("[data-close-style=\"1\"]"))) {
+      elClose.addEventListener("click", closeStyleModal);
+    }
+    btnStyleCancel?.addEventListener("click", closeStyleModal);
+
+    styleFile?.addEventListener("change", async () => {
+      const f = styleFile.files?.[0];
+      if (!f) return;
+      if (!String(f.type || "").startsWith("image/")) return alert("请选择图片文件。");
+      const url = URL.createObjectURL(f);
+      styleCropImg.src = url;
+      if (styleCropWrap) styleCropWrap.hidden = false;
+
+      await new Promise((resolve) => {
+        const done = () => resolve();
+        styleCropImg.addEventListener("load", done, { once: true });
+        styleCropImg.addEventListener("error", done, { once: true });
+      });
+
+      cropper.state.imgNaturalW = styleCropImg.naturalWidth || 0;
+      cropper.state.imgNaturalH = styleCropImg.naturalHeight || 0;
+      cropper.state.ready = cropper.state.imgNaturalW > 0 && cropper.state.imgNaturalH > 0;
+      cropper.applyBoxLayout();
+      cropper.resetToCover();
+      cropper.clampImgToCoverBox();
+      cropper.setImgTransform();
+      try {
+        URL.revokeObjectURL(url);
+      } catch {}
+    });
+
+    btnStyleSave?.addEventListener("click", () => {
+      const category = String(styleCategory?.value || "").trim();
+      if (!category) return alert("请填写分类。");
+      const thumb = cropper.cropToDataUrl(480, 270);
+      if (!thumb) return alert("请上传图片并完成裁剪。");
+      const id = `st_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      styleLibrary.unshift({ id, category, image: thumb, imageThumb: thumb });
+      saveStyleLibrary();
+      closeStyleModal();
+      renderAll();
+    });
+  }
+
   function applySidebarWidth(px) {
     const w = clamp(toNumber(px), 320, 720);
     document.documentElement.style.setProperty("--sidebarW", `${w}px`);
@@ -2774,6 +3259,7 @@ function init() {
   }
 
   initCustomUpload();
+  initStyleUpload();
   renderAll();
 }
 

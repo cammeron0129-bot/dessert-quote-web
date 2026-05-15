@@ -25,6 +25,7 @@
       <aside class="panel panel--left">
         <div class="tabs">
           <button class="tab tab--active" type="button" data-tab="menu">菜单</button>
+          <button class="tab" type="button" data-tab="style">摆台风格</button>
           <button class="tab" type="button" data-tab="quote">报价单</button>
         </div>
 
@@ -42,6 +43,16 @@
             </div>
           </div>
           <div id="menuList" class="list"></div>
+        </section>
+
+        <section class="tabpane" data-pane="style">
+          <div class="controls">
+            <div class="controls__row">
+              <button id="btnAddStyle" class="btn btn--ghost btn--sm" type="button">上传</button>
+              <span class="muted" id="styleCount"></span>
+            </div>
+          </div>
+          <div id="styleList" class="list"></div>
         </section>
 
         <section class="tabpane" data-pane="quote">
@@ -159,6 +170,7 @@
             <div id="qOrderNotesTitle" class="paper__footTitle" contenteditable="true" spellcheck="false">订购说明（可编辑）</div>
             <div id="qOrderNotes" class="orderNotes" contenteditable="true" spellcheck="false"></div>
           </div>
+          <div id="qStyles" class="quoteStyles"></div>
         </div>
       </section>
     </main>
@@ -237,9 +249,46 @@
       </div>
     </div>
 
+    <div id="styleModal" class="modal" aria-hidden="true">
+      <div class="modal__backdrop" data-close-style="1"></div>
+      <div class="modal__content modal__content--form" role="dialog" aria-modal="true" aria-label="新增摆台风格">
+        <button class="modal__close" type="button" data-close-style="1" aria-label="关闭">×</button>
+        <div class="modal__title">新增摆台风格</div>
+
+        <div class="modal__body">
+          <div class="formGrid">
+            <label class="field">
+              <div class="field__label">分类</div>
+              <input id="styleCategory" class="input" type="text" placeholder="例如：中秋国庆 / 生日 / 森系" />
+            </label>
+            <label class="field">
+              <div class="field__label">图片上传（16:9）</div>
+              <input id="styleFile" class="input" type="file" accept="image/*" />
+            </label>
+          </div>
+
+          <div class="cropWrap" id="styleCropWrap" hidden>
+            <div class="cropStage cropStage--169" id="styleCropStage">
+              <img id="styleCropImg" alt="裁剪预览" />
+              <div class="cropMask" aria-hidden="true"></div>
+              <div class="cropBox cropBox--169" id="styleCropBox" aria-hidden="true">
+                <div class="cropHandle" id="styleCropHandle" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="cropHint muted">拖动裁剪框与图片，比例固定 16:9。</div>
+          </div>
+        </div>
+
+        <div class="modal__actions">
+          <button id="btnStyleCancel" class="btn btn--ghost" type="button">取消</button>
+          <button id="btnStyleSave" class="btn" type="button">确认上传</button>
+        </div>
+      </div>
+    </div>
+
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=custom-upload4"></script>
+    <script src="./app.js?v=style1"></script>
   </body>
 </html>
