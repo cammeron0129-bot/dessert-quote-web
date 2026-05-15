@@ -1936,10 +1936,11 @@ function init() {
       html, body { margin: 0; padding: 0; background: #fff !important; }
       .page { width: ${A4_W}px; height: ${A4_H}px; background: #fff; overflow: hidden; box-sizing: border-box; page-break-after: always; position: relative; }
       .page:last-child { page-break-after: auto; }
-      .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; position: relative; z-index: 1; background: transparent; }
+      .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; position: relative; z-index: 0; background: transparent; }
       .scale {
         transform-origin: top left;
         position: relative;
+        z-index: 1;
       }
       /* Watermark: CSS background so it appears only when enabling browser print option “背景图形”. */
       .stage::after{
@@ -1957,10 +1958,10 @@ function init() {
         transform: rotate(-30deg);
         opacity: 0.1;
         pointer-events:none;
-        z-index: 10;
+        z-index: 0;
       }
       /* remove shadows/rounding for print */
-      .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
+      .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; background: transparent !important; }
       .topbar, .panel--left, .resizer, .modal, .no-print { display: none !important; }
     </style>
   </head>
