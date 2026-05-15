@@ -2042,20 +2042,22 @@ function init() {
       const SAFE_PAD = 16;
       const pageHeightUnscaled = Math.max(1, (stageHeight - SAFE_PAD) / s);
 
-      // 构建“不可切割块”列表：每一行、合计块、订购说明块与行
+      // 构建“不可切割块”列表：每一行、合计块、订购说明块与行、摆台风格块
       const blocks = [];
-      const pushBlock = (el) => {
+      const pushBlock = (el, kind = "generic") => {
         if (!el || !el.getBoundingClientRect) return;
         const rEl = el.getBoundingClientRect();
         const top = Math.max(0, rEl.top - contentTop);
         const bottom = Math.max(0, rEl.bottom - contentTop);
-        if (Number.isFinite(top) && Number.isFinite(bottom) && bottom > top + 1) blocks.push({ top, bottom });
+        if (Number.isFinite(top) && Number.isFinite(bottom) && bottom > top + 1) blocks.push({ top, bottom, kind });
       };
 
-      for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr);
-      pushBlock(imported.querySelector(".totals"));
-      pushBlock(imported.querySelector(".paper__foot"));
-      for (const div of Array.from(imported.querySelectorAll(".orderNotes > div"))) pushBlock(div);
+      for (const tr of Array.from(imported.querySelectorAll("tbody tr"))) pushBlock(tr, "row");
+      pushBlock(imported.querySelector(".totals"), "totals");
+      pushBlock(imported.querySelector(".paper__foot"), "foot");
+      for (const div of Array.from(imported.querySelectorAll(".orderNotes > div"))) pushBlock(div, "noteLine");
+      // style blocks should not be cut; additionally support "shrink a bit" if only small split would happen
+      for (const el of Array.from(imported.querySelectorAll(".quoteStyles__item"))) pushBlock(el, "style");
 
       blocks.sort((a, b) => a.top - b.top);
 
@@ -2070,12 +2072,32 @@ function init() {
       const segments = [];
       let start = 0;
       const EPS = 6;
+      let shrinkS = s; // allow small global shrink to keep style block on same page
+      const recomputePageHeightUnscaled = () => Math.max(1, (stageHeight - SAFE_PAD) / shrinkS);
       while (start < effectiveContentHeight - EPS) {
-        const max = start + pageHeightUnscaled;
+        const pageHeightUnscaled2 = recomputePageHeightUnscaled();
+        const max = start + pageHeightUnscaled2;
         // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
         const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
 
         if (overflow) {
+          if (overflow.kind === "style") {
+            const blockH = Math.max(1, overflow.bottom - overflow.top);
+            const cut = overflow.bottom - max; // how much would be cut off
+            const cutRatio = cut / blockH;
+            // If cut is small (<=20%), shrink slightly so the whole style block fits in this page.
+            if (cutRatio <= 0.2) {
+              const need = overflow.bottom - start + 2; // include tiny safety
+              const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
+              // only shrink (never enlarge), and clamp to avoid too much scaling down
+              const nextS = clamp(sNeeded, 0.7, shrinkS);
+              if (nextS < shrinkS - 0.001) {
+                shrinkS = nextS;
+                continue; // recompute max with new shrinkS for same start
+              }
+            }
+            // cut would be large: move the whole block to next page
+          }
           // 本页只显示到 overflow.top（不显示半行），下一页从 overflow.top 开始
           const nextStart = Math.max(overflow.top, start + EPS);
           // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
@@ -2087,9 +2109,9 @@ function init() {
         }
 
         // 没有切割：正常推进一页
-        const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
+        const heightUnscaled = Math.min(pageHeightUnscaled2, effectiveContentHeight - start);
         segments.push({ start, heightUnscaled });
-        start = start + pageHeightUnscaled;
+        start = start + pageHeightUnscaled2;
       }
       // Remove trailing zero-content segments (can happen due to rounding)
       while (segments.length > 1) {
@@ -2110,10 +2132,10 @@ function init() {
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * s))}px`;
+        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * shrinkS))}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
-        sc.style.transform = `scale(${s})`;
+        sc.style.transform = `scale(${shrinkS})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
         clone.style.top = `-${Math.floor(seg.start || 0)}px`;
