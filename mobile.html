@@ -88,13 +88,6 @@
                 <input id="metaNote" class="input" type="text" placeholder="例如：不含税 / 需提前一周预定" />
               </label>
               <label class="field">
-                <div class="field__label">导出PDF</div>
-                <label class="checkbox checkbox--option">
-                  <input id="pdfWatermark" type="checkbox" />
-                  添加水印
-                </label>
-              </label>
-              <label class="field">
                 <div class="field__label">订购说明（可选）</div>
                 <textarea id="metaOrderNotes" class="input input--textarea" rows="5" placeholder="每行一条，例如：&#10;1. 甜品台为预约项目，建议提前预定档期。&#10;2. 动物奶油易融，空调环境建议摆放 2–3 小时。"></textarea>
               </label>
@@ -113,7 +106,6 @@
 
       <section class="panel panel--right">
         <div id="quotePaper" class="paper">
-          <div id="quoteWatermarkPreview" class="paper__watermark" aria-hidden="true"></div>
           <div class="paper__head">
             <div class="paper__headTop">
               <img class="paper__logo" src="./assets/brand/logo.png" alt="当夏烘焙" />
@@ -180,6 +172,6 @@
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=watermark2"></script>
+    <script src="./app.js?v=rm-wm1"></script>
   </body>
 </html>

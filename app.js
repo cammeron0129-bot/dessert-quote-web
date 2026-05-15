@@ -45,7 +45,6 @@ function defaultMeta() {
     discountPercent: 100,
     taxPercent: 0,
     finalPrice: "",
-    pdfWatermark: false,
     note: "不含税",
     orderNotes:
       "1. 甜品台为预约项目，建议提前预定档期。\n2. 动物奶油易融，空调环境建议摆放 2–3 小时，请合理预约时间。\n3. 交通/摆台/撤场等费用请按实际情况另行确认。",
@@ -148,7 +147,6 @@ function init() {
   const qOrderNotesTitle = el("#qOrderNotesTitle");
   const qOrderNotes = el("#qOrderNotes");
   const quotePaper = el("#quotePaper");
-  const quoteWatermarkPreview = el("#quoteWatermarkPreview");
 
   const quoteTbody = el("#quoteTbody");
   const subtotalEl = el("#subtotal");
@@ -165,7 +163,6 @@ function init() {
   const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
   const btnExportPdf = el("#btnExportPdf");
-  const pdfWatermark = el("#pdfWatermark");
   const btnScreenshot = el("#btnScreenshot");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
@@ -1423,7 +1420,6 @@ function init() {
   async function exportPdfA4OnePage() {
     const exportName = buildExportName();
     const oldText = btnExportPdf.textContent;
-    const useWatermark = Boolean(state.meta.pdfWatermark);
     btnExportPdf.disabled = true;
     btnExportPdf.textContent = "生成中...";
 
@@ -1437,14 +1433,6 @@ function init() {
       const contentW = A4_W - MARGIN_X * 2;
 
       const node = buildExportNode(contentW);
-      let watermarkDataUrl = "";
-      if (useWatermark) {
-        try {
-          watermarkDataUrl = await toDataUrlFromUrl("./assets/brand/watermark.png");
-        } catch {
-          watermarkDataUrl = "";
-        }
-      }
       // Ensure latest render
       // (buildExportNode uses current state)
 
@@ -1477,26 +1465,6 @@ function init() {
       .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; }
       .scale {
         transform-origin: top left;
-      }
-      .watermark {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
-      }
-      .wm {
-        position: absolute;
-        width: 210px;
-        height: 157px;
-        background: url(${JSON.stringify(watermarkDataUrl || "./assets/brand/watermark.png").slice(1, -1)}) center / contain no-repeat;
-        opacity: 0.2;
-        transform: rotate(-35deg);
-        transform-origin: center;
-      }
-      .stage {
-        position: relative;
-        z-index: 1;
       }
       /* remove shadows/rounding for print */
       .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
@@ -1606,20 +1574,6 @@ function init() {
         const page = doc.createElement("div");
         page.className = "page";
         page.style.position = "relative";
-        if (useWatermark) {
-          const wmLayer = doc.createElement("div");
-          wmLayer.className = "watermark";
-          for (let yPos = -80; yPos < A4_H + 120; yPos += 180) {
-            for (let xPos = -120; xPos < A4_W + 160; xPos += 240) {
-              const mark = doc.createElement("div");
-              mark.className = "wm";
-              mark.style.left = `${xPos}px`;
-              mark.style.top = `${yPos}px`;
-              wmLayer.appendChild(mark);
-            }
-          }
-          page.appendChild(wmLayer);
-        }
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
@@ -1912,7 +1866,6 @@ function init() {
     metaDiscount.value = String(toNumber(state.meta.discountPercent || 100));
     metaTaxPercent.value = String(toNumber(state.meta.taxPercent || 0));
     metaFinalPrice.value = state.meta.finalPrice || "";
-    pdfWatermark.checked = Boolean(state.meta.pdfWatermark);
     metaNote.value = state.meta.note || "";
     metaOrderNotes.value = state.meta.orderNotes || "";
     metaOrderNotesTitle.value = state.meta.orderNotesTitle || "";
@@ -1924,26 +1877,6 @@ function init() {
     qNote.textContent = state.meta.note || "";
     qOrderNotes.textContent = state.meta.orderNotes || "";
     qOrderNotesTitle.textContent = state.meta.orderNotesTitle || "订购说明（可编辑）";
-    renderWatermarkPreview();
-  }
-
-  function renderWatermarkPreview() {
-    const enabled = Boolean(state.meta.pdfWatermark);
-    quotePaper.classList.toggle("paper--watermark", enabled);
-    quoteWatermarkPreview.innerHTML = "";
-    if (!enabled) return;
-
-    const w = Math.max(700, quotePaper.scrollWidth || 700);
-    const h = Math.max(900, quotePaper.scrollHeight || 900);
-    for (let y = -80; y < h + 140; y += 150) {
-      for (let x = -110; x < w + 160; x += 210) {
-        const mark = document.createElement("div");
-        mark.className = "paper__wm";
-        mark.style.left = `${x}px`;
-        mark.style.top = `${y}px`;
-        quoteWatermarkPreview.appendChild(mark);
-      }
-    }
   }
 
   function renderQuote() {
@@ -2252,7 +2185,6 @@ function init() {
     state.meta.discountPercent = clamp(toNumber(metaDiscount.value), 0, 100);
     state.meta.taxPercent = clamp(toNumber(metaTaxPercent.value), 0, 100);
     state.meta.finalPrice = metaFinalPrice.value.trim();
-    state.meta.pdfWatermark = Boolean(pdfWatermark.checked);
     state.meta.note = metaNote.value.trim();
     state.meta.orderNotes = metaOrderNotes.value || "";
     state.meta.orderNotesTitle = metaOrderNotesTitle.value.trim() || "";
@@ -2279,7 +2211,6 @@ function init() {
     metaDiscount,
     metaTaxPercent,
     metaFinalPrice,
-    pdfWatermark,
     metaNote,
     metaOrderNotes,
     metaOrderNotesTitle,
