@@ -2072,11 +2072,8 @@ function init() {
       const segments = [];
       let start = 0;
       const EPS = 6;
-      let shrinkS = s; // allow small global shrink to keep style block on same page
-      const recomputePageHeightUnscaled = () => Math.max(1, (stageHeight - SAFE_PAD) / shrinkS);
       while (start < effectiveContentHeight - EPS) {
-        const pageHeightUnscaled2 = recomputePageHeightUnscaled();
-        const max = start + pageHeightUnscaled2;
+        const max = start + pageHeightUnscaled;
         // 找到第一个会在本页被切割的块（top < max 且 bottom > max）
         const overflow = blocks.find((b) => b.top > start + EPS && b.top < max && b.bottom > max);
 
@@ -2085,15 +2082,15 @@ function init() {
             const blockH = Math.max(1, overflow.bottom - overflow.top);
             const cut = overflow.bottom - max; // how much would be cut off
             const cutRatio = cut / blockH;
-            // If cut is small (<=20%), shrink slightly so the whole style block fits in this page.
+            // If cut is small (<=20%), shrink ONLY THIS PAGE slightly so the whole style block fits.
             if (cutRatio <= 0.2) {
               const need = overflow.bottom - start + 2; // include tiny safety
               const sNeeded = (stageHeight - SAFE_PAD) / Math.max(1, need);
-              // only shrink (never enlarge), and clamp to avoid too much scaling down
-              const nextS = clamp(sNeeded, 0.7, shrinkS);
-              if (nextS < shrinkS - 0.001) {
-                shrinkS = nextS;
-                continue; // recompute max with new shrinkS for same start
+              const segScale = clamp(sNeeded, 0.7, s);
+              if (segScale < s - 0.001) {
+                segments.push({ start, heightUnscaled: Math.max(1, need), scale: segScale });
+                start = Math.max(start + 1, overflow.bottom);
+                continue;
               }
             }
             // cut would be large: move the whole block to next page
@@ -2103,15 +2100,15 @@ function init() {
           // 再往上收一点点，避免因像素取整导致“下一行露出一条边/一点图片”
           const end = Math.max(start + 1, nextStart - 2);
           const heightUnscaled = Math.max(1, end - start);
-          segments.push({ start, heightUnscaled });
+          segments.push({ start, heightUnscaled, scale: s });
           start = nextStart;
           continue;
         }
 
         // 没有切割：正常推进一页
-        const heightUnscaled = Math.min(pageHeightUnscaled2, effectiveContentHeight - start);
-        segments.push({ start, heightUnscaled });
-        start = start + pageHeightUnscaled2;
+        const heightUnscaled = Math.min(pageHeightUnscaled, effectiveContentHeight - start);
+        segments.push({ start, heightUnscaled, scale: s });
+        start = start + pageHeightUnscaled;
       }
       // Remove trailing zero-content segments (can happen due to rounding)
       while (segments.length > 1) {
@@ -2125,17 +2122,17 @@ function init() {
       // Clear and rebuild pages with clipped offsets
       pagesEl.innerHTML = "";
       for (let i = 0; i < totalPages; i += 1) {
-        const seg = segments[i] || { start: 0, heightUnscaled: pageHeightUnscaled };
+        const seg = segments[i] || { start: 0, heightUnscaled: pageHeightUnscaled, scale: s };
         const page = doc.createElement("div");
         page.className = "page";
         page.style.position = "relative";
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
-        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * shrinkS))}px`;
+        st.style.height = `${Math.max(1, Math.ceil(seg.heightUnscaled * (seg.scale || s)))}px`;
         const sc = doc.createElement("div");
         sc.className = "scale";
-        sc.style.transform = `scale(${shrinkS})`;
+        sc.style.transform = `scale(${seg.scale || s})`;
         const clone = doc.importNode(node, true);
         clone.style.position = "relative";
         clone.style.top = `-${Math.floor(seg.start || 0)}px`;
