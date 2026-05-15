@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>当夏｜菜单选择 → 自动报价单</title>
-    <link rel="stylesheet" href="./styles.css?v=align1" />
+    <link rel="stylesheet" href="./styles.css?v=watermark1" />
   </head>
   <body>
     <header class="topbar">
@@ -15,6 +15,10 @@
       <div class="topbar__actions">
         <button id="btnReset" class="btn btn--ghost" type="button">清空</button>
         <button id="btnExportCsv" class="btn btn--ghost" type="button">导出表格</button>
+        <label class="checkbox checkbox--inline">
+          <input id="pdfWatermark" type="checkbox" />
+          PDF水印
+        </label>
         <button id="btnExportPdf" class="btn btn--ghost" type="button">导出PDF</button>
         <button id="btnScreenshot" class="btn btn--ghost" type="button">截图导出</button>
         <button id="btnExportImage" class="btn" type="button">导出长图</button>
@@ -174,6 +178,6 @@
     <script src="./data/menu.js"></script>
     <script src="./data/template_quote.js"></script>
     <script src="./vendor/exceljs.min.js"></script>
-    <script src="./app.js?v=align2"></script>
+    <script src="./app.js?v=watermark1"></script>
   </body>
 </html>

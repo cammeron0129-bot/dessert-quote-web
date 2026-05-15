@@ -162,6 +162,7 @@ function init() {
   const btnExportImage = el("#btnExportImage");
   const btnExportCsv = el("#btnExportCsv");
   const btnExportPdf = el("#btnExportPdf");
+  const pdfWatermark = el("#pdfWatermark");
   const btnScreenshot = el("#btnScreenshot");
   const btnReset = el("#btnReset");
   const btnLoadTemplate = el("#btnLoadTemplate");
@@ -1419,6 +1420,7 @@ function init() {
   async function exportPdfA4OnePage() {
     const exportName = buildExportName();
     const oldText = btnExportPdf.textContent;
+    const useWatermark = Boolean(pdfWatermark?.checked);
     btnExportPdf.disabled = true;
     btnExportPdf.textContent = "生成中...";
 
@@ -1432,6 +1434,14 @@ function init() {
       const contentW = A4_W - MARGIN_X * 2;
 
       const node = buildExportNode(contentW);
+      let watermarkDataUrl = "";
+      if (useWatermark) {
+        try {
+          watermarkDataUrl = await toDataUrlFromUrl("./assets/brand/watermark.png");
+        } catch {
+          watermarkDataUrl = "";
+        }
+      }
       // Ensure latest render
       // (buildExportNode uses current state)
 
@@ -1464,6 +1474,26 @@ function init() {
       .stage { width: ${A4_W - MARGIN_X * 2}px; height: ${A4_H - MARGIN_TOP - MARGIN_BOTTOM}px; margin: ${MARGIN_TOP}px ${MARGIN_X}px ${MARGIN_BOTTOM}px ${MARGIN_X}px; overflow: hidden; box-sizing: border-box; }
       .scale {
         transform-origin: top left;
+      }
+      .watermark {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .wm {
+        position: absolute;
+        width: 210px;
+        height: 157px;
+        background: url(${JSON.stringify(watermarkDataUrl || "./assets/brand/watermark.png").slice(1, -1)}) center / contain no-repeat;
+        opacity: 0.2;
+        transform: rotate(-35deg);
+        transform-origin: center;
+      }
+      .stage {
+        position: relative;
+        z-index: 1;
       }
       /* remove shadows/rounding for print */
       .paper { box-shadow: none !important; border-radius: 0 !important; min-height: auto !important; }
@@ -1572,6 +1602,21 @@ function init() {
         const seg = segments[i] || { start: 0, heightUnscaled: pageHeightUnscaled };
         const page = doc.createElement("div");
         page.className = "page";
+        page.style.position = "relative";
+        if (useWatermark) {
+          const wmLayer = doc.createElement("div");
+          wmLayer.className = "watermark";
+          for (let yPos = -80; yPos < A4_H + 120; yPos += 180) {
+            for (let xPos = -120; xPos < A4_W + 160; xPos += 240) {
+              const mark = doc.createElement("div");
+              mark.className = "wm";
+              mark.style.left = `${xPos}px`;
+              mark.style.top = `${yPos}px`;
+              wmLayer.appendChild(mark);
+            }
+          }
+          page.appendChild(wmLayer);
+        }
         const st = doc.createElement("div");
         st.className = "stage";
         // 本页裁剪高度（避免显示半行），其余留白
